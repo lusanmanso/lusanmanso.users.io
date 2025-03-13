@@ -4,6 +4,7 @@
   "description": "Este proyecto implementa una API RESTful para la gestión de usuarios utilizando Node.js y Express. La API proporciona funcionalidades completas para registro, autenticación, validación y gestión de información de usuarios.",
   "main": "index.js",
   "scripts": {
+    "start": "node --watch app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
