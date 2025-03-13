@@ -1,8 +1,8 @@
 // File: server.js
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
+const connectDB = require('./config/database');
 const initRoutes = require('./routes');
 
 // Initialize Express
@@ -12,15 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log('MongoDB connected');
-  })
-  .catch(err => {
-    console.error('Error connecting to MongoDB:', err.message);
-    process.exit(1);
-  });
+// Connect to database
+connectDB();
 
 // Initialize all routes
 initRoutes(app);
