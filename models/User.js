@@ -1,5 +1,6 @@
 // File: models/User.js
 const mongoose = require('mongoose');
+const mongooseDelete = require('mongoose-delete');
 
 const UserSchema = new mongoose.Schema({
     // Basic fields for registration
