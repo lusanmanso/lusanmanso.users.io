@@ -1,8 +1,7 @@
 // File: controllers/userController.js
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
+const authService = require('../services/authService');
 
 /**
  * Register a new user
@@ -33,12 +32,11 @@ exports.registerUser = async (req, res) => {
         }
 
         // Generate 6-digit verification code
-        const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const verificationCode = authService.generateVerificationCode();
         const maxAttempts = 3; // Maximum number of attempts to validate the code
 
         // Encrypt the password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
+        const hashedPassword = await authService.hashPassword(password);
 
         // Create new user
         const newUser = new User({
@@ -63,11 +61,8 @@ exports.registerUser = async (req, res) => {
             }
         };
 
-        const token = jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
+        const token = authService.generateToken(payload);
+        console.log('Verification code for ${email}, {$verificationCode}');
 
         // Successful response
         res.status(201).json({
@@ -80,16 +75,166 @@ exports.registerUser = async (req, res) => {
             token
         });
 
-        // Here we would normally send an email with the verification code
-        // For this practice, the code can be found in the database
-
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-// Other controller methods would go here
-// exports.verifyEmail = async (req, res) => { ... }
-// exports.loginUser = async (req, res) => { ... }
-// etc.
+/** Verify user email with verification code
+    * @param {Object} req - Express request object
+    * @param {Object} res - Express response object
+    */
+exports.verifyEmail = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { code } = req.body;
+        const userId = req.user.id;
+
+        // Find user by ID
+        const user = await User.findById(userId);
+
+        // If user does not exist
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // If user is already verified
+        if (user.isEmailVerified) {
+            return res.status(400).json({ message: 'Email already verified' });
+        }
+
+        // Check if maximum attempts exceeded
+        if (user.verificationAttempts >= user.maxVerificationAttempts) {
+            return res.status(400).json({
+                message: 'Maximum verification attempts exceeded. Please request a new code.'
+            });
+        }
+
+        user.verificationAttempts += 1;
+
+        if (user.verificationCode !== code) {
+            await user.save();
+            return res.status(400).json({
+                message: 'Invalid verification code',
+                attemptsLeft: user.maxVerificationAttempts - user.verificationAttempts
+            });
+        }
+
+        // Update user as verified
+        user.isEmailVerified = true;
+        user.verificationCode = null;
+        await user.save();
+
+        // Return success response
+        return res.status(200).json({
+            message: 'Email verified successfully',
+            user: {
+                email: user.email,
+                status: 'verified',
+                role: user.role,
+                id: user.id
+            }
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+/**
+ * Login user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.loginUser = async (req, res) => {
+    try {
+        // Check validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const { email, password } = req.body;
+
+        // Find user by email
+        const user = await User.findOne({ email });
+
+        // If user does not exist
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Check if email is verified
+        if (!user) {
+            return res.status(400).json({
+                message: 'Email not verified. Please verify your email before logging in.',
+                needsVerification: true
+            });
+        }
+
+        // Check password
+        const isMatch = await authService.comparePassword(password, user.password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Generate JWT
+        const payload = {
+            user: {
+                id: user.id,
+                email: user.email,
+                role: user.role
+            }
+        };
+
+        const token = authService.generateToken(payload);
+
+        // Return success responde
+        res.status(200).json({
+            user: {
+                email: user.email,
+                status: user.isEmailVerified ? 'verified' : 'pending',
+                role: user.role,
+                id: user.id
+            },
+            token
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({message: 'Server error' });
+    }
+};
+
+/**
+ * Get current user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.getCurrentUser = async (req, res) => {
+    try {
+        // Get user from database (exclude password)
+        const user = await User.findById(req.user.id).select('-password');
+        
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        res.status(200).json({
+            user: {
+                email: user.email,
+                status: user.isEmailVerified ? 'verified' : 'pending',
+                role: user.role,
+                id: user.id,
+                // Include other user fields as needed
+            }
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
