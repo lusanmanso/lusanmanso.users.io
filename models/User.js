@@ -59,4 +59,10 @@ UserSchema.pre('save', function (next) {
     next();
 });
 
+// Soft delete plugin
+UserSchema.plugin(mongooseDelete, {
+    deleteAt: true,
+    overrideMethods: true
+});
+
 module.exports = mongoose.model('User', UserSchema);
