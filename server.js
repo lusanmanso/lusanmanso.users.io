@@ -5,6 +5,7 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/database');
 const initRoutes = require('./routes');
+const { googleApis } = require('googleapis');
 
 // Initialize Express
 const app = express();
@@ -35,4 +36,4 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = server;
+module.exports = app;
