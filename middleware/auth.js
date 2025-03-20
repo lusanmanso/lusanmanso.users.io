@@ -14,7 +14,7 @@ module.exports = function(req, res, next) {
   }
 
   // Check if follows Bearer format
-  if (!authHeader.startsWith('Bearer')) {
+  if (!authHeader.startsWith('Bearer ')) {
     return res.status(401).json({message: 'Invalid token format, must use Bearer'});
   }
   // Extract the token (remove 'Bearer' prefix)
