@@ -1,4 +1,4 @@
-// File: config/database.js
+// File: config/mongo.js
 const mongoose = require('mongoose');
 
 /**

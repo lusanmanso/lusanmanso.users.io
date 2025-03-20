@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const connectDB = require('./config/database');
+const connectDB = require('./config/mongo');
 const initRoutes = require('./routes');
 const { googleApis } = require('googleapis');
 
