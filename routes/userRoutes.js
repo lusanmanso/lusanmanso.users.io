@@ -1,6 +1,6 @@
 // File: routes/userRoutes.js
 const express = require('express');
-const { validateEmail, validatePassword, validateVerificationCode } = require('../validators/userValidators');
+const { validateEmail, validatePassword } = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
 
@@ -13,7 +13,7 @@ const router = express.Router();
  */
 router.post(
   '/register',
-  [validateEmail, validatePassword, validateVerificationCode],
+  [validateEmail, validatePassword],
   userController.registerUser
 );
 

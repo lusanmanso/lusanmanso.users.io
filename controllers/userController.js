@@ -62,7 +62,7 @@ exports.registerUser = async (req, res) => {
         };
 
         const token = authService.generateToken(payload);
-        console.log('Verification code for ${email}, {$verificationCode}');
+        console.log('Verification code for ${email}: ${verificationCode}');
 
         // Successful response
         res.status(201).json({
@@ -170,7 +170,7 @@ exports.loginUser = async (req, res) => {
         }
 
         // Check if email is verified
-        if (!user) {
+        if (!user.isEmailVerified) {
             return res.status(400).json({
                 message: 'Email not verified. Please verify your email before logging in.',
                 needsVerification: true
