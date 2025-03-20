@@ -127,7 +127,7 @@ exports.verifyEmail = async (req, res) => {
 
         // Update user as verified
         user.isEmailVerified = true;
-        user.verificationCode = null;
+        user.verificationCode = "";
         await user.save();
 
         // Return success response
