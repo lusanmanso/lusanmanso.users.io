@@ -17,6 +17,55 @@ const UserSchema = new mongoose.Schema({
         minlength: 8
     },
 
+    // Personal fields
+    firstName: {
+        type: String,
+        trim: true
+    },
+    lastName: {
+        type: String,
+        trim: true
+    },
+    nif: {
+        type: String,
+        trim: true
+    },
+
+    // Company data
+    company: {
+        name: {
+            type: String,
+            trim: true
+        },
+        cif: {
+            type: String,
+            trim: true
+        },
+        address: {
+            street: {
+                type: String,
+                trim: true
+            },
+            city: {
+                type: String,
+                trim: true
+            },
+            postalCode: {
+                type: String,
+                trim: true
+            },
+            country: {
+                type: String,
+                trim: true,
+                default: 'Spain'
+            }
+        },
+        isAutonomous: {
+            type: Boolean,
+            default: false
+        }
+    },
+
     // Email verification fields
     isEmailVerified: {
         type: Boolean,
