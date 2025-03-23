@@ -1,6 +1,6 @@
 // File: routes/userRoutes.js
 const express = require('express');
-const { validateEmail, validatePassword, validateVerificationCode } = require('../validators/userValidators');
+const { validateEmail, validatePassword, validateVerificationCode, validateCompanyData } = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
 
@@ -49,6 +49,28 @@ router.get(
   '/',
   auth,
   userController.getCurrentUser
+);
+
+/**
+ * @route PUT /api/user
+ * @desc Update user personal data (onboarding)
+ * @access Private
+ */
+router.put(
+  '/',
+  [auth, ...validatePersonalData],
+  userController.updatePersonalData
+);
+
+/**
+ * @route PATCH /api/user/company
+ * @desc Update company data
+ * @access Private
+ */
+router.patch(
+  '/company',
+  [auth, ...validateCompanyData],
+  userController.updateCompanyData
 );
 
 module.exports = router;
