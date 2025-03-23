@@ -284,3 +284,61 @@ exports.updatePersonalData = async (req, res) => {
     }
 };
 
+/**
+ * Update company data
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.updateCompanyData = async (req, res) => {
+    try {
+        // Check validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+
+        const userId = req.user.id;
+        const { company } = req.body;
+
+        // Find user by ID
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+
+        // Check if user is autonomous
+        if (company.isAutonomous) {
+            // If user is autonomous, use personal data for company
+            if (!user.firstName || !user.lastName || !user.nif) {
+                return res.status(400).json({ 
+                    message: 'Para usuarios autónomos, primero debes completar tus datos personales' 
+                });
+            }
+
+            // Set company data using personal data
+            user.company = {
+                name: `${user.firstName} ${user.lastName}`,
+                cif: user.nif, // Using NIF as CIF for autonomous
+                address: company.address,
+                isAutonomous: true
+            };
+        } else {
+            // For regular companies, use provided data
+            user.company = company;
+        }
+
+        await user.save();
+
+        res.status(200).json({
+            message: 'Datos de la compañía actualizados correctamente',
+            user: {
+                id: user.id,
+                email: user.email,
+                company: user.company
+            }
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
