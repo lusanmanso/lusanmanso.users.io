@@ -238,3 +238,49 @@ exports.getCurrentUser = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+/** 
+ * Update user personal data
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+exports.updatePersonalData = async (req, res) => {
+    try {
+        // Check validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        }
+        
+        const userId = req.user.id;
+        const { firstName, lastName, nif } = req.body;
+
+        // Find user by ID
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+
+        // Update personal data
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.nif = nif;
+
+        await user.save();
+        
+        res.status(200).json({
+            user: {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                nif: user.nif
+            }
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
