@@ -2,6 +2,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { file } = require('googleapis/build/src/apis/file');
 
 // Ensure upload directory exists
 const uploadDir = path.join(__dirname, '../uploads/logos');
@@ -22,3 +23,26 @@ const storage = multer.diskStorage({
     cb(null, `logo_${userId}_${timestamp}${extension}`);
   }
 });
+
+// File filter that allows only image
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image')) {
+        cb(null, true);
+    } else {
+        cb(new Error('Not an image! Please upload an image.', false));
+    }
+};
+
+// Upload limits
+const limits = {
+    fileSize: 1024 * 1024 * 2 // 2MB
+};
+
+//Create multer instance with configuration
+const upload = multer({
+    storage,
+    fileFilter,
+    limits
+});
+
+moduleExports = upload;
