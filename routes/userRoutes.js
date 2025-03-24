@@ -1,8 +1,10 @@
 // File: routes/userRoutes.js
 const express = require('express');
 const { validateEmail, validatePassword, validateVerificationCode, validateCompanyData } = require('../validators/userValidators');
+const logoController = require('../controllers/logoController');
 const userController = require('../controllers/userController');
 const auth = require('../middleware/auth');
+const upload = require('..middleware/upload');
 
 const router = express.Router();
 
@@ -11,8 +13,8 @@ const router = express.Router();
  * @desc    Register a new user
  * @access  Public
  */
-router.post(
-  '/register',
+  router.post(
+    '/register',
   [validateEmail, validatePassword],
   userController.registerUser
 );
@@ -71,6 +73,17 @@ router.patch(
   '/company',
   [auth, ...validateCompanyData],
   userController.updateCompanyData
+);
+
+/**
+ * @route PATCH/api/user/logo
+ * @desc Upload company logo
+ * @access Private
+ */
+router.patch(
+  '/logo',
+  [auth, upload.single('logo')],
+  logoController.uploadLogo
 );
 
 module.exports = router;
