@@ -66,6 +66,18 @@ const UserSchema = new mongoose.Schema({
         }
     },
 
+    // Company logo
+    logo: {
+        url: {
+            type: String,
+            default: null,
+        },
+        filename: {
+            type: String,
+            default: null
+        }
+    },
+
     // Email verification fields
     isEmailVerified: {
         type: Boolean,
