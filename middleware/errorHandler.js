@@ -12,5 +12,18 @@ exports.handleMulterErrors = (err, req, res, next) => {
         return res.status(400).json({ message: `Upload error: ${err.message}` });
     } else if (err) {
         // Unknown error occurred
+        return res.status(500).json({ message: err.message });
     }
-}
+    next(); // No error occurred, continue
+};
+
+/**
+ * Handle general API errors
+ */
+exports.handleApiErrors = (err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({
+        message: 'Server error',
+        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
+    });
+};
