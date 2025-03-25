@@ -1,8 +1,8 @@
 // File: routes/userRoutes.js
 const express = require('express');
 const { validateEmail, validatePassword, validateVerificationCode, validateCompanyData } = require('../validators/userValidators');
-const logoController = require('../controllers/logoController');
 const userController = require('../controllers/userController');
+const logoController = require('../controllers/logoController');
 const auth = require('../middleware/auth');
 const upload = require('..middleware/upload');
 
@@ -33,7 +33,7 @@ router.put(
 
 /**
  * @route POST /api/user/login
- * desc Login user and get token
+ * @desc Login user and get token
  * @access Public
  */
 router.post(
@@ -83,6 +83,7 @@ router.patch(
 router.patch(
   '/logo',
   [auth, upload.single('logo')],
+  require('./middleware/errorHandler').handleMulterErrors,
   logoController.uploadLogo
 );
 
