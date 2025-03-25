@@ -5,7 +5,8 @@ const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/mongo');
 const initRoutes = require('./routes');
-const { googleApis } = require('googleapis');
+const { handleApiErrors } = require('./middleware/errorHandler');
+// const { googleApis } = require('googleapis');
 
 // Initialize Express
 const app = express();
@@ -24,11 +25,8 @@ connectDB();
 // Initialize all routes
 initRoutes(app)
 
-// Handle server errors
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({message: 'Something went wrong!', error: err.message});
-});
+// Error handle middleware
+app.use(handleApiErrors);
 
 // Port and server start
 const PORT = process.env.PORT || 3000;
