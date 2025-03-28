@@ -87,4 +87,15 @@ router.patch(
   logoController.uploadLogo
 );
 
+/**
+ * @route DELETE /api/user
+ * @desc Delete current user
+ * @access Private
+ */
+router.delete(
+  '/',
+  auth,
+  userController.deleteUser
+);
+
 module.exports = router;
