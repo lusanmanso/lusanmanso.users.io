@@ -1,10 +1,10 @@
 // File: routes/userRoutes.js
 const express = require('express');
-const { validateEmail, validatePassword, validateVerificationCode, validateCompanyData } = require('../validators/userValidators');
+const { validateEmail, validatePassword, validateVerificationCode, validatePersonalData, validateCompanyData } = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
 const auth = require('../middleware/auth');
-const upload = require('..middleware/upload');
+const upload = require('.middleware/upload');
 
 const router = express.Router();
 

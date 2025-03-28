@@ -14,11 +14,11 @@ exports.uploadLogo = async(req, res) => {
             return res.status(400).json({ message: 'Not file uploaded' });
         }
         
-        const userId = req.userId;
+        const userId = req.user.id;
         const file = req.file;
 
         // Generate URL for the uploaded file
-        const baseUrl = `${req.protocol}:://${req.get('host')}`;
+        const baseUrl = `${req.protocol}://${req.get('host')}`;
         const relativePath = `/uploads/logos/${file.filename}`;
         const logoUrl = `${baseUrl}${relativePath}`;
 
