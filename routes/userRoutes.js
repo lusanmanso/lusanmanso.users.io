@@ -1,10 +1,10 @@
 // File: routes/userRoutes.js
 const express = require('express');
-const { validateEmail, validatePassword, validateVerificationCode, validateCompanyData } = require('../validators/userValidators');
+const { validateEmail, validatePassword, validateVerificationCode, validatePersonalData, validateCompanyData } = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
 const auth = require('../middleware/auth');
-const upload = require('..middleware/upload');
+const upload = require('.middleware/upload');
 
 const router = express.Router();
 
@@ -85,6 +85,38 @@ router.patch(
   [auth, upload.single('logo')],
   require('./middleware/errorHandler').handleMulterErrors,
   logoController.uploadLogo
+);
+
+/**
+ * @route DELETE /api/user
+ * @desc Delete current user
+ * @access Private
+ */
+router.delete(
+  '/',
+  auth,
+  userController.deleteUser
+);
+
+/**
+ * Recover and reset pass
+ */
+router.post(
+  '/recover-password',
+  validateEmail,
+  userController.requestPasswordReset
+);
+
+router.post(
+   '/reset-password',
+    validatePassword,
+    userController.resetPassword
+);
+
+router.post(
+  '/invite',
+  [auth, validateEmail],
+  userController.inviteTeamMember
 );
 
 module.exports = router;
