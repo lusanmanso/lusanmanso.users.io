@@ -4,7 +4,8 @@ const { validateEmail, validatePassword, validateVerificationCode, validatePerso
 const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
 const auth = require('../middleware/auth');
-const upload = require('.middleware/upload');
+const upload = require('../middleware/fileUpload');
+const { handleMulterErrors } = require('../middleware/errorHandler');
 
 const router = express.Router();
 
@@ -83,7 +84,7 @@ router.patch(
 router.patch(
   '/logo',
   [auth, upload.single('logo')],
-  require('./middleware/errorHandler').handleMulterErrors,
+  require('../middleware/errorHandler').handleMulterErrors,
   logoController.uploadLogo
 );
 
@@ -113,6 +114,11 @@ router.post(
     userController.resetPassword
 );
 
+/**
+ * @route POST /api/user/invite
+ * @desc Invite a team member
+ * @access Private
+ */
 router.post(
   '/invite',
   [auth, validateEmail],

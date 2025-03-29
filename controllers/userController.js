@@ -345,6 +345,8 @@ exports.updateCompanyData = async (req, res) => {
 
 /**
  * Delete user
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
  */
 exports.deleteUser = async (req, res) => {
     try {
@@ -369,6 +371,11 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
+/**
+ * Request password reset
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 exports.requestPasswordReset = async (req, res) => {
     try {
         const { email } = req.body;
@@ -398,6 +405,11 @@ exports.requestPasswordReset = async (req, res) => {
     }
 };
 
+/**
+ * Reset password
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 exports.resetPassword = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;

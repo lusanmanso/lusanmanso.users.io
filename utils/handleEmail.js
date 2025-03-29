@@ -56,7 +56,7 @@ exports.sendVerificationEmail = async (email, code) => {
             html: `<h2> ${code} </h2>`
         };
 
-        return await transporter.sendEmail(mailOptions);
+        return await transporter.sendMail(mailOptions);
 
     } catch (error) {
         console.log('Error sending verification email');
@@ -103,7 +103,7 @@ exports.sendInvitationEmail = async (email, tempPassword, companyName) => {
         const mailOptions = {
             from: `"API" <${process.env.EMAIL}>`,
             to: email,
-            subject: `Invitation to join ${company}`,
+            subject: `Invitation to join ${companyName}`,
             html: `${tempPassword}`
         };
 
