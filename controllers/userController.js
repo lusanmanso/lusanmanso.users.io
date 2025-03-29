@@ -367,8 +367,42 @@ exports.deleteUser = async (req, res) => {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
     }
+};
 
-    /**
-     * 
-     */
+/**
+ * Password reset
+ */
+exports.requestPasswordReset = async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+
+        // Verify user exists
+        const user = await User.findOne({
+            email,
+            passwordResetCode: code,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ message: 'Invalid or expired code' });
+        }
+
+        // Validate new password
+        if (newPassword.length < 8) {
+            return res.status(400).json({ message: 'Password has to have minimum 8 chars' });
+        }
+
+        // Update password
+        const hashedPassword = await authService.hashPassword(newPassword);
+        user.password = hashedPassword;
+        user.passwordResetCode = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        res.status(200).json({ message: 'Password updated successfully' });
+
+    } catch (err) {
+        console.log(error.message);
+        res.status(500).json({message: 'Server error'});
+    }
 };
