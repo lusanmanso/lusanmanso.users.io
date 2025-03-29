@@ -83,9 +83,34 @@ exports.sendPasswordResetEmail = async (email, code) => {
 
         return await transporter.sendPasswordResetEmail(mailOptions);
 
-
     } catch (error) {
         console.log('Error sending password reset email');
+        throw error;
+    }
+};
+
+/**
+ * Send invitation email to team member (with guest role)
+ * @param {string} email - Recipient email address
+ * @param {string} tempPassword - Temporary password
+ * @param {string} companyName - Company name
+ * @returns {Promise<any>} Result of email sending
+ */
+exports.sendInvitationEmail = async (email, tempPassword, companyName) => {
+    try {
+        const transporter = await createTransporter();
+
+        const mailOptions = {
+            from: `"API" <${process.env.EMAIL}>`,
+            to: email,
+            subject: `Invitation to join ${company}`,
+            html: `${tempPassword}`
+        };
+
+        return await transporter.sendInvitationEmail(mailOptions);
+
+    } catch (error) {
+        console.log('Error sending invitation');
         throw error;
     }
 };
