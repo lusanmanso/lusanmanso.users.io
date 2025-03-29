@@ -2,7 +2,7 @@
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const { file } = require('googleapis/build/src/apis/file');
+// const { file } = require('googleapis/build/src/apis/file');
 
 // Ensure upload directory exists
 const uploadDir = path.join(__dirname, '../uploads/logos');
@@ -45,4 +45,4 @@ const upload = multer({
     limits
 });
 
-moduleExports = upload;
+module.exports = upload;

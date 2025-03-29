@@ -342,3 +342,159 @@ exports.updateCompanyData = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+/**
+ * Delete user
+ */
+exports.deleteUser = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const softDelete = req.query.soft != 'false'; // Default is soft delete
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({message: 'User not found'});
+        }
+
+        if (softDelete) { // Using mongoose-delete
+            await user.delete();
+            return res.status(200).json({ message: 'User deleted temporarilly' });
+        } else { // Hard delete
+            await User.findByIdAndDelete(userId);
+            return res.status(200).json({ message: 'User deleted permanently' });
+        }
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+exports.requestPasswordReset = async (req, res) => {
+    try {
+        const { email } = req.body;
+        
+        // Verificar que el email existe
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'Email no encontrado' });
+        }
+
+        // Generar código de recuperación
+        const resetCode = authService.generateVerificationCode();
+        const resetExpires = Date.now() + 3600000; // 1 hora
+        
+        // Guardar código en la base de datos
+        user.passwordResetCode = resetCode;
+        user.passwordResetExpires = resetExpires;
+        await user.save();
+        
+        // Enviar email con código
+        await handleEmail.sendPasswordResetEmail(email, resetCode);
+        
+        res.status(200).json({ message: 'Se ha enviado un código de recuperación al email proporcionado' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+
+exports.resetPassword = async (req, res) => {
+    try {
+        const { email, code, newPassword } = req.body;
+        
+        // Verificar que el email existe
+        const user = await User.findOne({ 
+            email, 
+            passwordResetCode: code,
+            passwordResetExpires: { $gt: Date.now() } 
+        });
+        
+        if (!user) {
+            return res.status(400).json({ message: 'Código inválido o expirado' });
+        }
+        
+        // Validar nueva contraseña
+        if (newPassword.length < 8) {
+            return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+        }
+        
+        // Actualizar contraseña
+        const hashedPassword = await authService.hashPassword(newPassword);
+        user.password = hashedPassword;
+        user.passwordResetCode = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+        
+        res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
+
+exports.inviteTeamMember = async (req, res) => {
+    try {
+        const { email, role } = req.body;
+        const ownerId = req.user.id;
+        
+        // Verificar el rol
+        if (role && role !== 'guest') {
+            return res.status(400).json({ message: 'Los usuarios invitados solo pueden tener rol "guest"' });
+        }
+        
+        // Obtener datos de la compañía del propietario
+        const owner = await User.findById(ownerId);
+        if (!owner || !owner.company) {
+            return res.status(400).json({ message: 'Debe configurar los datos de su compañía antes de invitar miembros' });
+        }
+        
+        // Verificar si el email ya está registrado
+        let invitedUser = await User.findOne({ email });
+        
+        if (invitedUser) {
+            // Si ya existe, asociarlo a la compañía
+            invitedUser.role = 'guest';
+            invitedUser.companyId = owner.company._id;
+            await invitedUser.save();
+            
+            return res.status(200).json({ 
+                message: 'Usuario existente invitado a la compañía',
+                user: {
+                    email: invitedUser.email,
+                    role: invitedUser.role
+                }
+            });
+        }
+        
+        // Generar contraseña aleatoria
+        const tempPassword = Math.random().toString(36).slice(-8);
+        const hashedPassword = await authService.hashPassword(tempPassword);
+        
+        // Crear nuevo usuario con rol guest
+        const verificationCode = authService.generateVerificationCode();
+        const newUser = new User({
+            email,
+            password: hashedPassword,
+            role: 'guest',
+            companyId: owner.company._id,
+            verificationCode,
+            isEmailVerified: false
+        });
+        
+        await newUser.save();
+        
+        // Enviar email de invitación (implementar en handleEmail.js)
+        // await handleEmail.sendInvitationEmail(email, tempPassword, verificationCode);
+        
+        res.status(201).json({
+            message: 'Invitación enviada con éxito',
+            user: {
+                email: newUser.email,
+                role: newUser.role
+            }
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).json({ message: 'Error del servidor' });
+    }
+};
