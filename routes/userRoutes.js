@@ -98,4 +98,25 @@ router.delete(
   userController.deleteUser
 );
 
+/**
+ * Recover and reset pass
+ */
+router.post(
+  '/recover-password',
+  validateEmail,
+  userController.requestPasswordReset
+);
+
+router.post(
+   '/reset-password',
+    validatePassword,
+    userController.resetPassword
+);
+
+router.post(
+  '/invite',
+  [auth, validateEmail],
+  userController.inviteTeamMember
+);
+
 module.exports = router;
