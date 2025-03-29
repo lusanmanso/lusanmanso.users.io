@@ -38,3 +38,28 @@ const createTransporter = async () => {
 
     return transporter;
 };
+
+/**
+ * Send verification email with code
+ * @param {string} email - Recipient email address
+ * @param {string} code - Verification code
+ * @returns {Promise<any>} Result of email sending
+ */
+exports.sendVerificationEmail = async (email, code) => {
+    try {
+        const transporter = await createTransporter();
+
+        const mailOptions = {
+            from: `"API" <$process.env.EMAIL)>`,
+            to: email,
+            subject: "Email verification",
+            html: `<h2> ${code} </h2>`
+        };
+
+        return await transporter.sendEmail(emailOptions);
+
+    } catch (error) {
+        console.log('Error sending verification email');
+        throw error;
+    }
+};
