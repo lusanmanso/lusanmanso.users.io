@@ -50,16 +50,42 @@ exports.sendVerificationEmail = async (email, code) => {
         const transporter = await createTransporter();
 
         const mailOptions = {
-            from: `"API" <$process.env.EMAIL)>`,
+            from: `"API" <${process.env.EMAIL}>`,
             to: email,
             subject: "Email verification",
             html: `<h2> ${code} </h2>`
         };
 
-        return await transporter.sendEmail(emailOptions);
+        return await transporter.sendEmail(mailOptions);
 
     } catch (error) {
         console.log('Error sending verification email');
+        throw error;
+    }
+};
+
+/**
+ * Send password reset email with code
+ * @param {string} email - Recipient email address
+ * @param {string} code - Password reset code
+ * @returns {Promise<any>} Result of email sending
+ */
+exports.sendPasswordResetEmail = async (email, code) => {
+    try {
+        const transporter = await createTransporter();
+        
+        const mailOptions = {
+            from: `"API" <${process.env.EMAIL}>`,
+            to: email,
+            subject: "Password Reset Request",
+            html: `<h2> ${code} </h2>`
+        };
+
+        return await transporter.sendPasswordResetEmail(mailOptions);
+
+
+    } catch (error) {
+        console.log('Error sending password reset email');
         throw error;
     }
 };
