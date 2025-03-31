@@ -3,13 +3,31 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/mongo');
 const initRoutes = require('./routes');
 const { handleApiErrors } = require('./middleware/errorHandler');
 // const { googleApis } = require('googleapis');
 
+// Ensure required directories exist
+const ensureDirectories = () => {
+  const directories = [
+    path.join(__dirname, 'uploads'),
+    path.join(__dirname, 'uploads/logos')
+  ];
+
+  directories.forEach(dir => {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+      console.log(`Created directory: ${dir}`);
+    }
+  });
+};
+
 // Initialize Express
 const app = express();
+
+ensureDirectories();
 
 // Middlewares
 app.use(cors());
