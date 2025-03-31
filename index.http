@@ -1,0 +1,123 @@
+# Registro de usuario (POST)
+POST http://localhost:3000/api/user/register
+Content-Type: application/json
+
+{
+  "email": "usuario@ejemplo.com",
+  "password": "Password1!"
+}
+
+# Respuesta 201 con datos del usuario y token JWT
+# Error 409 si intentas registrar un email ya existente y verificado
+# Errores 400 si el email o password no cumplen las validaciones
+
+# Validación del email (PUT)
+PUT http://localhost:3000/api/user/validation
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
+
+{
+  "code": "123456"  // El código generado durante el registro
+}
+
+# Respuesta 200 si el código es correcto
+# Error 400 si el código es incorrecto o ya se han agotado los intentos
+
+# Login (POST)
+POST http://localhost:3000/api/user/login
+Content-Type: application/json
+
+{
+  "email": "usuario@ejemplo.com",
+  "password": "Password1!"
+}
+
+# Respuesta 200 con datos del usuario y token JWT
+# Error 401 si las credenciales son incorrectas
+# Error 400 si el email no está verificado
+
+# On boarding - Datos personales (PUT)
+PUT http://localhost:3000/api/user
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
+
+{
+  "firstName": "Maria",
+  "lastName": "Marta",
+  "nif": "12345678Z"
+}
+
+# Respuesta 200 con los datos actualizados
+# Errores de validación si los datos no cumplen los requisitos
+
+# On boarding - Datos de compañía (PATCH)
+PATCH http://localhost:3000/api/user/company
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
+
+{
+    "company": {
+    "name": "Mi Empresa SL",
+    "cif": "B12345678",
+    "address": {
+        "street": "Calle Principal 123",
+        "city": "Madrid",
+        "postalCode": "28001"
+    },
+        "isAutonomous": false
+    }
+}
+
+# Respuesta 200 con los datos actualizados
+# Para autónomos, verifica que usa los datos personales
+
+# Logo (PATCH)
+PATCH http://localhost:3000/api/user/logo
+Authorization: Bearer TU_TOKEN_JWT
+Content-Type: multipart/form-data
+
+logo: [archivo de imagen]
+
+# Respuesta 200 con la URL del logo guardado
+# Error si el archivo no es una imagen o excede el tamaño permitido
+
+# Obtener usuario actual (GET)
+GET http://localhost:3000/api/user
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
+
+# Respuesta 200 con los datos del usuario
+
+# Eliminar usuario (DELETE)
+DELETE http://localhost:3000/api/user?soft=true
+Authorization: Bearer TU_TOKEN_JWT
+
+# Respuesta 200 confirmando la eliminación
+# Cambia soft=true a soft=false para probar la eliminación permanente
+
+# Recuperación de contraseña
+POST http://localhost:3000/api/user/recover-password
+Content-Type: application/json
+
+{
+  "email": "usuario@ejemplo.com"
+}
+
+# Después de recibir el código
+POST http://localhost:3000/api/user/reset-password
+Content-Type: application/json
+
+{
+  "email": "usuario@ejemplo.com",
+  "code": "123456",
+  "newPassword": "NuevaPassword1!"
+}
+
+# Invitar a compañeros
+POST http://localhost:3000/api/user/invite
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94   
+
+{
+  "email": "invitado@ejemplo.com",
+  "role": "guest"
+}
