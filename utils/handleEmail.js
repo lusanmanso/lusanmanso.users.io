@@ -107,7 +107,7 @@ exports.sendInvitationEmail = async (email, tempPassword, companyName) => {
             html: `<h2> Your temporary password is: ${tempPassword} </h2>`
         };
 
-        return await transporter.sendEmail(mailOptions);
+        return await transporter.sendMail(mailOptions);
 
     } catch (error) {
         console.log('Error sending invitation');
