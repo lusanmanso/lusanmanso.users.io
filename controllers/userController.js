@@ -393,7 +393,7 @@ exports.requestPasswordReset = async (req, res) => {
         // Verificar que el email existe
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: 'Email no encontrado' });
+            return res.status(404).json({ message: 'Email not found' });
         }
 
         // Generar código de recuperación
@@ -404,14 +404,19 @@ exports.requestPasswordReset = async (req, res) => {
         user.passwordResetCode = resetCode;
         user.passwordResetExpires = resetExpires;
         await user.save();
+
+        // Send email with code
+        try {
+            await handleEmail.sendPasswordResetEmail(email, resetCode);
+            console.log(`Password reset email sent to ${email}`);
+        } catch (emailError) {
+            console.error(`Error sending password reset email: `, emailError);
+        }
         
-        // Enviar email con código
-        await handleEmail.sendPasswordResetEmail(email, resetCode);
-        
-        res.status(200).json({ message: 'Se ha enviado un código de recuperación al email proporcionado' });
+        res.status(200).json({ message: 'If the email exists you will recieve a reset code' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ message: 'Error del servidor' });
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
