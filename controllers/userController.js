@@ -2,6 +2,7 @@
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const authService = require('../services/authService');
+const handleEmail = require('../utils/handleEmail');
 
 /**
  * Register a new user
@@ -62,7 +63,16 @@ exports.registerUser = async (req, res) => {
         };
 
         const token = authService.generateToken(payload);
-        console.log(`Verification code for ${email}: ${verificationCode}`);
+
+        // Send verification email
+        try {
+            await handleEmail.sendVerificationEmail(email, verificationCode);
+            console.log(`Verification email sent to ${email}`);
+        } catch (emailError) {
+            console.error('Error sending verification mail: ', emailError);
+        }
+
+        // console.log(`Verification code for ${email}: ${verificationCode}`);
 
         // Successful response
         res.status(201).json({
