@@ -429,7 +429,7 @@ exports.resetPassword = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
         
-        // Verificar que el email existe
+        // Verify user exists and code is valid
         const user = await User.findOne({ 
             email, 
             passwordResetCode: code,
@@ -437,25 +437,25 @@ exports.resetPassword = async (req, res) => {
         });
         
         if (!user) {
-            return res.status(400).json({ message: 'Código inválido o expirado' });
+            return res.status(400).json({ message: 'Invalid or expired code' });
         }
         
-        // Validar nueva contraseña
+              // Validate new password
         if (newPassword.length < 8) {
             return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
         }
         
-        // Actualizar contraseña
+        // Update password
         const hashedPassword = await authService.hashPassword(newPassword);
         user.password = hashedPassword;
         user.passwordResetCode = undefined;
         user.passwordResetExpires = undefined;
         await user.save();
         
-        res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+        res.status(200).json({ message: 'Password updated successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ message: 'Error del servidor' });
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
