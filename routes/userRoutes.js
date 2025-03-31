@@ -25,7 +25,6 @@ const router = express.Router();
  * @desc Verify user email with code
  * @access Private
  */
-
 router.put(
   '/validation',
   [auth, validateVerificationCode],
@@ -99,9 +98,7 @@ router.delete(
   userController.deleteUser
 );
 
-/**
- * Recover and reset pass
- */
+// TODO - Comentar algo lol
 router.post(
   '/recover-password',
   validateEmail,

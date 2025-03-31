@@ -53,7 +53,7 @@ exports.sendVerificationEmail = async (email, code) => {
             from: `"API" <${process.env.EMAIL}>`,
             to: email,
             subject: "Email verification",
-            html: `<h2> ${code} </h2>`
+            html: `<h2> Your verification code is: ${code} </h2>`
         };
 
         return await transporter.sendMail(mailOptions);
@@ -78,10 +78,10 @@ exports.sendPasswordResetEmail = async (email, code) => {
             from: `"API" <${process.env.EMAIL}>`,
             to: email,
             subject: "Password Reset Request",
-            html: `<h2> ${code} </h2>`
+            html: `<h2>Your password reset code is: ${code} </h2>`
         };
 
-        return await transporter.sendPasswordResetEmail(mailOptions);
+        return await transporter.sendMail(mailOptions);
 
     } catch (error) {
         console.log('Error sending password reset email');
@@ -104,10 +104,10 @@ exports.sendInvitationEmail = async (email, tempPassword, companyName) => {
             from: `"API" <${process.env.EMAIL}>`,
             to: email,
             subject: `Invitation to join ${companyName}`,
-            html: `${tempPassword}`
+            html: `<h2> Your temporary password is: ${tempPassword} </h2>`
         };
 
-        return await transporter.sendInvitationEmail(mailOptions);
+        return await transporter.sendEmail(mailOptions);
 
     } catch (error) {
         console.log('Error sending invitation');
