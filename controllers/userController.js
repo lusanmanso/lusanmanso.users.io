@@ -440,9 +440,9 @@ exports.resetPassword = async (req, res) => {
             return res.status(400).json({ message: 'Invalid or expired code' });
         }
         
-              // Validate new password
+        // Validate new password
         if (newPassword.length < 8) {
-            return res.status(400).json({ message: 'La contraseña debe tener al menos 8 caracteres' });
+            return res.status(400).json({ message: 'Password must containt at least 8 characters' });
         }
         
         // Update password
@@ -484,8 +484,20 @@ exports.inviteTeamMember = async (req, res) => {
             invitedUser.companyId = owner.company._id;
             await invitedUser.save();
             
+            // Enviar email de notificación
+            try {
+                await handleEmail.sendInvitationEmail(
+                    email, 
+                    "User already registered", 
+                    "N/A", 
+                    owner.company.name
+                );
+            } catch (emailError) {
+                console.error('Error sending invitation notification:', emailError);
+            }
+            
             return res.status(200).json({ 
-                message: 'Usuario existente invitado a la compañía',
+                message: 'Existing user invited to the company',
                 user: {
                     email: invitedUser.email,
                     role: invitedUser.role
@@ -493,11 +505,11 @@ exports.inviteTeamMember = async (req, res) => {
             });
         }
         
-        // Generar contraseña aleatoria
+        // Generate random password
         const tempPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await authService.hashPassword(tempPassword);
         
-        // Crear nuevo usuario con rol guest
+        // Create new user with guest role
         const verificationCode = authService.generateVerificationCode();
         const newUser = new User({
             email,
@@ -505,13 +517,25 @@ exports.inviteTeamMember = async (req, res) => {
             role: 'guest',
             companyId: owner.company._id,
             verificationCode,
-            isEmailVerified: false
+            isEmailVerified: false,
+            maxVerificationAttempts: 3,
+            verificationAttempts: 0
         });
         
         await newUser.save();
         
-        // Enviar email de invitación (implementar en handleEmail.js)
-        // await handleEmail.sendInvitationEmail(email, tempPassword, verificationCode);
+        // Enviar email de invitación
+        try {
+            await handleEmail.sendInvitationEmail(
+                email, 
+                tempPassword, 
+                verificationCode, 
+                owner.company.name
+            );
+            console.log(`Invitation email sent to ${email}`);
+        } catch (emailError) {
+            console.error('Error sending invitation email:', emailError);
+        }
         
         res.status(201).json({
             message: 'Invitación enviada con éxito',
