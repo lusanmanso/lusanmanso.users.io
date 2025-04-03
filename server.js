@@ -8,6 +8,10 @@ const connectDB = require('./config/mongo');
 const initRoutes = require('./routes');
 const { handleApiErrors } = require('./middleware/errorHandler');
 // const { googleApis } = require('googleapis');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpecs = require('./docs/swagger');
+const { Server } = require('http');
+const swagger = require('./docs/swagger');
 
 // Ensure required directories exist
 const ensureDirectories = () => {
@@ -33,6 +37,14 @@ ensureDirectories();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger documentation
+app.use("/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(swaggerSpecs)
+)
+
+app.use("/api", require("/routes"))
 
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
