@@ -96,28 +96,22 @@ const UserSchema = new mongoose.Schema({
         default: 3
     },
 
+    // Password reset fields
+    passwordResetCode: {
+      type: String,
+      required: false
+    },
+    passwordResetExpires: {
+      type: Date,
+      required: false
+    },
+
     // User role
     role: {
         type: String,
         enum: ['user', 'admin', 'guest'],
         default: 'user'
     },
-
-    // Timestamps
-    createdAt: {
-        type: Date,
-        default: Date.now
-    },
-    updatedAt: {
-        type: Date,
-        default: Date.now
-    }
-});
-
-// Middleware to update the modification date before saving
-UserSchema.pre('save', function (next) {
-    this.updatedAt = Date.now();
-    next();
 });
 
 // Soft delete plugin
