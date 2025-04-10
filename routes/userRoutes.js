@@ -5,7 +5,7 @@ const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/fileUpload');
-const { handleMulterErrors } = require('../middleware/errorHandler');
+const { handleMulterErrors } = require('../middleware/handleError');
 
 const router = express.Router();
 
