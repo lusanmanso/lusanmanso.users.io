@@ -45,6 +45,15 @@ exports.generateToken = (payload) => {
 };
 
 /**
+ * Generate a reset token with expiration
+ */
+exports.generateResetToken = () => {
+   return crypto.randomBytes(32).toString('hex');
+   expires: Date.now() + 3600000 // 1h
+};
+
+
+/**
  * Verify a JWT token
  * @param {string} token - JWT token to verify
  * @returns {Object|null} Decoded token payload or null if invalid
