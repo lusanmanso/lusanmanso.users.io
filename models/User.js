@@ -112,7 +112,7 @@ const UserSchema = new mongoose.Schema({
         enum: ['user', 'admin', 'guest'],
         default: 'user'
     },
-});
+}, { timestamps: true });
 
 // Soft delete plugin
 UserSchema.plugin(mongooseDelete, {

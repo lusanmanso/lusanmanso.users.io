@@ -1,6 +1,7 @@
 // File: services/authService.js
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
 /**
  * Hash a password with bcrypt
@@ -27,7 +28,7 @@ exports.comparePassword = async (password, hash) => {
  * @returns {string} 6-digit verification code
  */
 exports.generateVerificationCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
+    return crypto.randomInt(100000, 999999).toString();
 };
 
 /**
