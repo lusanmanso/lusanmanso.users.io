@@ -12,6 +12,9 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerSpecs = require('./docs/swagger');
 
 // Ensure required directories exist
+/**
+ * Ensure required upload directories exist
+ */
 const ensureDirectories = () => {
   const directories = [
     path.join(__dirname, 'uploads'),

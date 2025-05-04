@@ -4,6 +4,13 @@ const config = require('../config/config');
 
 /**
  * Custom class for API errors
+ * API Error class for operational errors
+ * @class
+ * @extends Error
+ * @param {number} statusCode - HTTP status code
+ * @param {string} message - Error message
+ * @param {string} type - Error type identifier
+ * @param {Object} data - Additional error data
  */
 class ApiError extends Error {
    constructor(statusCode, message, type = 'general', data = {}) {
@@ -17,6 +24,10 @@ class ApiError extends Error {
 
 /**
  * Handle multer errors
+ * @param {Error} err - Multer error object
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @param {Function} next - Next middleware function
  */
 exports.handleMulterErrors = (err, req, res, next) => {
    if (err instanceof multer.MulterError) {
@@ -31,7 +42,11 @@ exports.handleMulterErrors = (err, req, res, next) => {
 };
 
 /**
- * Handle global API errors
+ * Global API error handler
+ * @param {Error} err - Error object
+ * @param {Object} req - Express request
+ * @param {Object} res - Express response
+ * @param {Function} next - Next middleware function
  */
 exports.handleApiErrors = (err, req, res, next) => {
    // If is a known operational error
@@ -61,7 +76,11 @@ exports.handleApiErrors = (err, req, res, next) => {
    });
 };
 
-// Middleware to catch async errors
+/**
+ * Wrap async controllers to catch and forward errors
+ * @param {Function} fn - Async controller function
+ * @returns {Function} Wrapped function
+ */
 exports.asyncHandler = (fn) => (req, res, next) => {
    Promise.resolve(fn(req, res, next)).catch(next);
 };

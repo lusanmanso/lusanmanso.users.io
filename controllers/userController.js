@@ -229,11 +229,11 @@ exports.getCurrentUser = async (req, res) => {
     try {
         // Get user from database (exclude password)
         const user = await User.findById(req.user.id).select('-password');
-        
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        
+
         res.status(200).json({
             user: {
                 email: user.email,
@@ -249,7 +249,7 @@ exports.getCurrentUser = async (req, res) => {
     }
 };
 
-/** 
+/**
  * Update user personal data
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
@@ -261,7 +261,7 @@ exports.updatePersonalData = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
         }
-        
+
         const userId = req.user.id;
         const { firstName, lastName, nif } = req.body;
 
@@ -278,7 +278,7 @@ exports.updatePersonalData = async (req, res) => {
         user.nif = nif;
 
         await user.save();
-        
+
         res.status(200).json({
             user: {
                 id: user.id,
@@ -320,7 +320,7 @@ exports.updateCompanyData = async (req, res) => {
         if (company.isAutonomous) {
             // If user is autonomous, use personal data for company
             if (!user.firstName || !user.lastName || !user.nif) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     message: 'For autonomous users, you must first complete your personal data'
                 });
             }
@@ -389,7 +389,7 @@ exports.deleteUser = async (req, res) => {
 exports.requestPasswordReset = async (req, res) => {
     try {
         const { email } = req.body;
-        
+
         // Verificar que el email existe
         const user = await User.findOne({ email });
         if (!user) {
@@ -399,7 +399,7 @@ exports.requestPasswordReset = async (req, res) => {
         // Generar código de recuperación
         const resetCode = authService.generateVerificationCode();
         const resetExpires = Date.now() + 3600000; // 1 hora
-        
+
         // Guardar código en la base de datos
         user.passwordResetCode = resetCode;
         user.passwordResetExpires = resetExpires;
@@ -412,7 +412,7 @@ exports.requestPasswordReset = async (req, res) => {
         } catch (emailError) {
             console.error(`Error sending password reset email: `, emailError);
         }
-        
+
         res.status(200).json({ message: 'If the email exists you will recieve a reset code' });
     } catch (err) {
         console.error(err.message);
@@ -428,30 +428,30 @@ exports.requestPasswordReset = async (req, res) => {
 exports.resetPassword = async (req, res) => {
     try {
         const { email, code, newPassword } = req.body;
-        
+
         // Verify user exists and code is valid
-        const user = await User.findOne({ 
-            email, 
+        const user = await User.findOne({
+            email,
             passwordResetCode: code,
-            passwordResetExpires: { $gt: Date.now() } 
+            passwordResetExpires: { $gt: Date.now() }
         });
-        
+
         if (!user) {
             return res.status(400).json({ message: 'Invalid or expired code' });
         }
-        
+
         // Validate new password
         if (newPassword.length < 8) {
             return res.status(400).json({ message: 'Password must containt at least 8 characters' });
         }
-        
+
         // Update password
         const hashedPassword = await authService.hashPassword(newPassword);
         user.password = hashedPassword;
         user.passwordResetCode = undefined;
         user.passwordResetExpires = undefined;
         await user.save();
-        
+
         res.status(200).json({ message: 'Password updated successfully' });
     } catch (err) {
         console.error(err.message);
@@ -459,44 +459,49 @@ exports.resetPassword = async (req, res) => {
     }
 };
 
+/**
+ * Invite a team member to the company
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 exports.inviteTeamMember = async (req, res) => {
     try {
         const { email, role } = req.body;
         const ownerId = req.user.id;
-        
+
         // Verificar el rol
         if (role && role !== 'guest') {
             return res.status(400).json({ message: 'Los usuarios invitados solo pueden tener rol "guest"' });
         }
-        
+
         // Obtener datos de la compañía del propietario
         const owner = await User.findById(ownerId);
         if (!owner || !owner.company) {
             return res.status(400).json({ message: 'Debe configurar los datos de su compañía antes de invitar miembros' });
         }
-        
+
         // Verificar si el email ya está registrado
         let invitedUser = await User.findOne({ email });
-        
+
         if (invitedUser) {
             // Si ya existe, asociarlo a la compañía
             invitedUser.role = 'guest';
             invitedUser.companyId = owner.company._id;
             await invitedUser.save();
-            
+
             // Enviar email de notificación
             try {
                 await handleEmail.sendInvitationEmail(
-                    email, 
-                    "User already registered", 
-                    "N/A", 
+                    email,
+                    "User already registered",
+                    "N/A",
                     owner.company.name
                 );
             } catch (emailError) {
                 console.error('Error sending invitation notification:', emailError);
             }
-            
-            return res.status(200).json({ 
+
+            return res.status(200).json({
                 message: 'Existing user invited to the company',
                 user: {
                     email: invitedUser.email,
@@ -504,11 +509,11 @@ exports.inviteTeamMember = async (req, res) => {
                 }
             });
         }
-        
+
         // Generate random password
         const tempPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await authService.hashPassword(tempPassword);
-        
+
         // Create new user with guest role
         const verificationCode = authService.generateVerificationCode();
         const newUser = new User({
@@ -521,22 +526,22 @@ exports.inviteTeamMember = async (req, res) => {
             maxVerificationAttempts: 3,
             verificationAttempts: 0
         });
-        
+
         await newUser.save();
-        
+
         // Enviar email de invitación
         try {
             await handleEmail.sendInvitationEmail(
-                email, 
-                tempPassword, 
-                verificationCode, 
+                email,
+                tempPassword,
+                verificationCode,
                 owner.company.name
             );
             console.log(`Invitation email sent to ${email}`);
         } catch (emailError) {
             console.error('Error sending invitation email:', emailError);
         }
-        
+
         res.status(201).json({
             message: 'Invitación enviada con éxito',
             user: {

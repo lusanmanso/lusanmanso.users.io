@@ -5,15 +5,15 @@ const path = require('path');
 
 /**
  * Upload company logo
- * @param {Object} req Request object
- * @param {Object} res Response object  
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
  */
 exports.uploadLogo = async(req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: 'Not file uploaded' });
         }
-        
+
         const userId = req.user.id;
         const file = req.file;
 

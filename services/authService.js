@@ -45,7 +45,8 @@ exports.generateToken = (payload) => {
 };
 
 /**
- * Generate a reset token with expiration
+ * Generate a password reset token
+ * @returns {string} Hex string token for password reset
  */
 exports.generateResetToken = () => {
    return crypto.randomBytes(32).toString('hex');

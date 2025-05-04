@@ -2,7 +2,11 @@
 const { body } = require('express-validator');
 const User = require('../models/User');
 
-// Email validator
+/**
+ * Validate email field in request body
+ * @name validateEmail
+ * @middleware
+ */
 const validateEmail = body('email')
     .isEmail()
     .withMessage('Please enter a valid email')
@@ -16,7 +20,11 @@ const validateEmail = body('email')
     })
     .normalizeEmail();
 
-// Password validator
+/**
+ * Validate password field in request body
+ * @name validatePassword
+ * @middleware
+ */
 const validatePassword = body('password')
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long')
@@ -36,14 +44,22 @@ const validatePassword = body('password')
         return true;
     });
 
-// Verification code validator
+/**
+ * Validate 6-digit numeric verification code
+ * @name validateVerificationCode
+ * @middleware
+ */
 const validateVerificationCode = body('code')
     .isLength({ min: 6, max: 6 })
     .withMessage('Verification code must be 6 digits')
     .isNumeric()
     .withMessage('Verification code must contain only numbers');
 
-// Personal data validator
+/**
+ * Personal data validation chain for onboarding
+ * @name validatePersonalData
+ * @middleware
+ */
 const validatePersonalData = [
     body('firstName')
         .notEmpty()
@@ -67,7 +83,11 @@ const validatePersonalData = [
         .trim()
 ];
 
-// Company data validator
+/**
+ * Company data validation chain for onboarding
+ * @name validateCompanyData
+ * @middleware
+ */
 const validateCompanyData = [
     body('company.name')
         .notEmpty()
@@ -92,7 +112,7 @@ const validateCompanyData = [
         .notEmpty()
         .withMessage('City is required')
         .trim(),
-    
+
     body('company.address.postalCode')
         .notEmpty()
         .withMessage('Postal code is required')
