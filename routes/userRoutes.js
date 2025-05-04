@@ -3,7 +3,7 @@ const express = require('express');
 const { validateEmail, validatePassword, validateVerificationCode, validatePersonalData, validateCompanyData } = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 const upload = require('../middleware/fileUpload');
 const { handleMulterErrors } = require('../middleware/handleError');
 
@@ -14,10 +14,10 @@ const router = express.Router();
  * @desc    Register a new user
  * @access  Public
  */
-  router.post(
-    '/register',
-  [validateEmail, validatePassword],
-  userController.registerUser
+router.post(
+   '/register',
+   [validateEmail, validatePassword],
+   userController.registerUser
 );
 
 /**
@@ -26,9 +26,9 @@ const router = express.Router();
  * @access Private
  */
 router.put(
-  '/validation',
-  [auth, validateVerificationCode],
-  userController.verifyEmail
+   '/validation',
+   [auth, validateVerificationCode],
+   userController.verifyEmail
 );
 
 /**
@@ -37,9 +37,9 @@ router.put(
  * @access Public
  */
 router.post(
-  '/login',
-  [validateEmail, validatePassword],
-  userController.loginUser
+   '/login',
+   [validateEmail, validatePassword],
+   userController.loginUser
 );
 
 /**
@@ -48,9 +48,9 @@ router.post(
  * @access Private
  */
 router.get(
-  '/',
-  auth,
-  userController.getCurrentUser
+   '/',
+   auth,
+   userController.getCurrentUser
 );
 
 /**
@@ -59,9 +59,9 @@ router.get(
  * @access Private
  */
 router.put(
-  '/',
-  [auth, ...validatePersonalData],
-  userController.updatePersonalData
+   '/',
+   [auth, ...validatePersonalData],
+   userController.updatePersonalData
 );
 
 /**
@@ -70,9 +70,9 @@ router.put(
  * @access Private
  */
 router.patch(
-  '/company',
-  [auth, ...validateCompanyData],
-  userController.updateCompanyData
+   '/company',
+   [auth, ...validateCompanyData],
+   userController.updateCompanyData
 );
 
 /**
@@ -81,10 +81,9 @@ router.patch(
  * @access Private
  */
 router.patch(
-  '/logo',
-  [auth, upload.single('logo')],
-  require('../middleware/errorHandler').handleMulterErrors,
-  logoController.uploadLogo
+   '/logo',
+   [auth, upload.single('logo'), handleMulterErrors],
+   logoController.uploadLogo
 );
 
 /**
@@ -93,22 +92,22 @@ router.patch(
  * @access Private
  */
 router.delete(
-  '/',
-  auth,
-  userController.deleteUser
+   '/',
+   auth,
+   userController.deleteUser
 );
 
 // TODO - Comentar algo lol
 router.post(
-  '/recover-password',
-  validateEmail,
-  userController.requestPasswordReset
+   '/recover-password',
+   validateEmail,
+   userController.requestPasswordReset
 );
 
 router.post(
    '/reset-password',
-    validatePassword,
-    userController.resetPassword
+   validatePassword,
+   userController.resetPassword
 );
 
 /**
@@ -117,9 +116,9 @@ router.post(
  * @access Private
  */
 router.post(
-  '/invite',
-  [auth, validateEmail],
-  userController.inviteTeamMember
+   '/invite',
+   [auth, validateEmail],
+   userController.inviteTeamMember
 );
 
 module.exports = router;
