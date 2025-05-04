@@ -1,14 +1,22 @@
 // File: middleware/fileUpload.js
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-// const { file } = require('googleapis/build/src/apis/file');
+const fs = require('fs').promises;
+const { ApiError } = require('./handleError');
+const config = require('../config/config');
 
 // Ensure upload directory exists
-const uploadDir = path.join(__dirname, '../uploads/logos');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const ensureUploadDir = async () => {
+   try {
+     await fs.access(config.storage.localPath);
+   } catch (error) {
+     // Directory does not exist: create
+     await fs.mkdir(config.storage.localPath, { recursive: true });
+   }
+ };
+
+ // Initialize directory
+ ensureUploadDir().catch(err => console.error('Error creating uploads directory: ', err));
 
 // Configure storage
 const storage = multer.diskStorage({
@@ -26,6 +34,8 @@ const storage = multer.diskStorage({
 
 // File filter that allows only image
 const fileFilter = (req, file, cb) => {
+   // Allowed MIME types of images
+   const allowedMimesTypes = ['image(jpeg']
     if (file.mimetype.startsWith('image')) {
         cb(null, true);
     } else {
