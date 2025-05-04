@@ -163,3 +163,45 @@ exports.deleteClient = async (req, res) => {
    res.status(200).json({ message: 'Client deleted successfully' });
 };
 
+/**
+ * @desc    Get all archived clients from user
+ * @route   GET /api/client/archived
+ * @access  Private
+ */
+exports.getArchivedClients = async (req, res) => {
+   const userId = req.user.id;
+
+   const clients = await Client.find({ createdBy: userId, archived: true })
+                               .populate('company', 'name'); // Opcional
+
+   res.status(200).json(clients);
+ };
+
+ /**
+  * @desc    Recover an archived client
+  * @route   PATCH /api/client/recover/:id
+  * @access  Private
+  */
+ exports.recoverClient = async (req, res) => {
+   const userId = req.user.id;
+   const clientId = req.params.id;
+
+   const client = await Client.findOne({ _id: clientId, createdBy: userId });
+
+   if (!client) {
+     throw new ApiError(404, 'Client not found or you do not have permission', 'not_found');
+   }
+
+   if (!client.archived) {
+     throw new ApiError(400, 'Client is not archived', 'bad_request');
+   }
+
+   client.archived = false;
+   const recoveredClient = await client.save();
+
+   res.status(200).json({
+     message: 'Client recovered successfully',
+     client: recoveredClient
+   });
+ };
+
