@@ -10,9 +10,9 @@ const { handleMulterErrors } = require('../middleware/handleError');
 const router = express.Router();
 
 /**
- * @route   POST /api/user/register
- * @desc    Register a new user
- * @access  Public
+ * @route POST /api/user/register
+ * @desc Register a new user
+ * @access Public
  */
 router.post(
    '/register',
