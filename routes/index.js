@@ -2,6 +2,7 @@
 const express = require('express');
 const userRoutes = require('./userRoutes');
 const clientRoutes = require('./clientRoutes');
+const projectRoutes = require('./projectRoutes');
 
 /**
  * Initialize all API routes
@@ -12,6 +13,8 @@ function initRoutes(app) {
   app.use('/api/user', userRoutes);
   // Client routes
   app.use('/api/client', clientRoutes);
+   // Project routes
+   app.use('/api/project', projectRoutes);
 
   // Add other route groups here as application grows
 
@@ -23,6 +26,7 @@ function initRoutes(app) {
       endpoints: {
         users: '/api/user',
         clients: '/api/client',
+        projects: '/api/project',
       }
     });
   });
