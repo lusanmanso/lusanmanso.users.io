@@ -13,10 +13,10 @@ router.use(auth); // Apply auth middleware to all routes
 const validateMongoId = param('id').isMongoId().withMessage('Invalid client ID');
 
 /**
- * @route   POST /api/client
- * @desc    Crear un nuevo cliente
- * @access  Private
- * @body    { name: string, email: string, company?: string (ObjectId) }
+ * @route POST /api/client
+ * @desc Create a new client
+ * @access Private
+ * @body { name: string, email: string, company?: string (ObjectId) }
  */
 router.post(
   '/',
@@ -25,9 +25,9 @@ router.post(
 );
 
 /**
- * @route   GET /api/client
- * @desc    Obtener la lista de clientes activos del usuario
- * @access  Private
+ * @route GET /api/client
+ * @desc Get all active clients of the user
+ * @access Private
  */
 router.get(
   '/',
@@ -35,9 +35,9 @@ router.get(
 );
 
 /**
- * @route   GET /api/client/archived
- * @desc    Obtener la lista de clientes archivados del usuario
- * @access  Private
+ * @route GET /api/client/archived
+ * @desc Get all archived clients of the user
+ * @access Private
  */
 router.get(
   '/archived',
@@ -45,10 +45,10 @@ router.get(
 );
 
 /**
- * @route   GET /api/client/:id
- * @desc    Obtener un cliente específico por su ID
- * @access  Private
- * @param   id (Client's MongoDB ObjectId)
+ * @route GET /api/client/:id
+ * @desc Get a client by ID
+ * @access Private
+ * @param id (Client's MongoDB ObjectId)
  */
 router.get(
   '/:id',
@@ -57,11 +57,11 @@ router.get(
 );
 
 /**
- * @route   PUT /api/client/:id
- * @desc    Actualizar un cliente existente
- * @access  Private
- * @param   id (Client's MongoDB ObjectId)
- * @body    { name?: string, email?: string, company?: string (ObjectId) }
+ * @route PUT /api/client/:id
+ * @desc Update a client
+ * @access Private
+ * @param id (Client's MongoDB ObjectId)
+ * @body { name?: string, email?: string, company?: string (ObjectId) }
  */
 router.put(
   '/:id',
@@ -78,10 +78,10 @@ router.patch(
 );
 
 /**
- * @route   PATCH /api/client/archive/:id
- * @desc    Archivar un cliente (Soft Delete)
- * @access  Private
- * @param   id (Client's MongoDB ObjectId)
+ * @route PATCH /api/client/archive/:id
+ * @desc Archive a client (soft delete)
+ * @access Private
+ * @param id (Client's MongoDB ObjectId)
  */
 router.patch(
   '/:id/archive',
@@ -90,10 +90,10 @@ router.patch(
 );
 
 /**
- * @route   PATCH /api/client/recover/:id
- * @desc    Recuperar un cliente archivado
- * @access  Private
- * @param   id (Client's MongoDB ObjectId)
+ * @route PATCH /api/client/recover/:id
+ * @desc  Recover an archived client (soft delete)
+ * @access Private
+ * @param id (Client's MongoDB ObjectId)
  */
 router.patch(
   '/:id/recover',
@@ -103,10 +103,10 @@ router.patch(
 
 
 /**
- * @route   DELETE /api/client/:id
- * @desc    Eliminar un cliente permanentemente (Hard Delete)
- * @access  Private
- * @param   id (Client's MongoDB ObjectId)
+ * @route DELETE /api/client/:id
+ * @desc Delete a client (hard delete)
+ * @access Private
+ * @param id (Client's MongoDB ObjectId)
  */
 router.delete(
   '/:id',
