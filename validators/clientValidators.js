@@ -2,7 +2,7 @@
 const { body } = require('express-validator');
 
 /**
- * Validate client data for creation and update
+ * Validate client data for creation
  * @module clientValidators
  * @requires express-validator
  */

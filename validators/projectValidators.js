@@ -1,7 +1,19 @@
+// File: validators/projectValidators.js
 const { body, param } = require('express-validator');
 const mongoose = require('mongoose');
 
-const validateMongoIdInParam = param('id').isMongoId.withMessage('Invalid ID format');
+/**
+ * Validate Mongo ID in request parameters
+ * @module projectValidators
+ * @requires express-validator
+ */
+const validateMongoIdInParam = param('id').isMongoId().withMessage('Invalid ID format');
+
+/**
+ * Validate project data for creation
+ * @module projectValidators
+ * @requires express-validator
+ */
 const createProjectValidator = [
    body('name')
       .notEmpty().withMessage('Project name is required')
@@ -20,6 +32,11 @@ const createProjectValidator = [
       .isMongoId().withMessage('Invalid Client ID format')
 ];
 
+/**
+ * Validate project data for update
+ * @module projectValidators
+ * @requires express-validator
+ */
 const updateProjectValidator = [
    body('name')
       .optional({ nullable: true })
