@@ -4,7 +4,7 @@ const { param, check } = require('express-validator');
 const { createClientValidators, updateClientValidators } = require('../validators/clientValidators');
 const clientController = require('../controllers/clientController');
 const { auth } = require('../middleware/auth');
-// const { asyncHandler } = require('../middleware/handleError'); FIXME: destructuring declaration needs initializer
+// const { asyncHandler } = require('../middleware/handleError');
 
 const router = express.Router();
 router.use(auth); // Apply auth middleware to all routes
