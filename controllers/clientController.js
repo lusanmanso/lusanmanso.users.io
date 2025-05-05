@@ -1,7 +1,7 @@
 // File: controllers/clientController.js
 const validationResult = require('express-validator').validationResult; // TODO: .validationResult es necesario?
-const Client = require('../models/clientModel');
-const { ApiError } = require('../middlwares/handleError');
+const Client = require('../models/Client');
+const { ApiError } = require('../middleware/handleError');
 
 /**
  * @desc Create a new client
