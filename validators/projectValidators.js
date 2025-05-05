@@ -1,58 +1,83 @@
 // File: validators/projectValidators.js
-const { body, param } = require('express-validator');
-const mongoose = require('mongoose');
+const { body } = require('express-validator');
+const {
+  validateMongoId,
+  handleValidationErrors,
+  validateRequiredString,
+  validateOptionalString,
+  validateMongoIdBody,
+  validateOptionalDate,
+} = require('./commonValidators');
+const Project = require('../models/Project'); // Needed for uniqueness check if required
 
 /**
- * Validate Mongo ID in request parameters
- * @module projectValidators
- * @requires express-validator
+ * Validation rules for creating a new project.
+ * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
-const validateMongoIdInParam = param('id').isMongoId().withMessage('Invalid ID format');
-
-/**
- * Validate project data for creation
- * @module projectValidators
- * @requires express-validator
- */
-const createProjectValidator = [
-   body('name')
-      .notEmpty().withMessage('Project name is required')
-      .isString().withMessage('Project name must be a string')
-      .trim()
-      .isLength({ min: 2, max: 150 }).withMessage('Project name must be between 2 and 150 characters'),
-
-   body('description')
-      .optional()
-      .isString().withMessage('Description must be a string')
-      .trim ()
-      .isLength({ max: 500 }).withMessage('Description cannot exceed 500 characters'),
-
-   body('client')
-      .notEmpty().withMessage('Client ID is required')
-      .isMongoId().withMessage('Invalid Client ID format')
+const validateCreateProject = [
+  validateRequiredString('name', 3),
+  validateRequiredString('description', 10),
+  validateMongoIdBody('clientId'), // Ensure clientId is a valid ObjectId in the body
+  validateOptionalDate('startDate'),
+  validateOptionalDate('endDate'),
+  body('endDate').custom((value, { req }) => {
+    if (value && req.body.startDate && new Date(value) < new Date(req.body.startDate)) {
+      throw new Error('End date cannot be before start date.');
+    }
+    return true;
+  }),
+  // Add custom validation if project names must be unique per client/user
+  // .custom(async (name, { req }) => {
+  //   const userId = req.user?.id;
+  //   const clientId = req.body.clientId;
+  //   if (!userId || !clientId) {
+  //     throw new Error('User or Client ID not found for validation.');
+  //   }
+  //   const existingProject = await Project.findOne({ name, userId, clientId });
+  //   if (existingProject) {
+  //     return Promise.reject('Project with this name already exists for this client.');
+  //   }
+  // }),
+  handleValidationErrors,
 ];
 
 /**
- * Validate project data for update
- * @module projectValidators
- * @requires express-validator
+ * Validation rules for updating an existing project.
+ * Allows partial updates (PATCH/PUT).
+ * Requires project ID in the route parameter.
+ * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
-const updateProjectValidator = [
-   body('name')
-      .optional({ nullable: true })
-      .isString().withMessage('Project name must be a string')
-      .trim()
-      .isLength({ min: 2, max: 150 }).withMessage('Project name must be between 2 and 150 characters'),
-
-   body('description')
-      .optional({ nullable: true })
-      .isString().withMessage('Description must be a string')
-      .trim()
-      .isLength({ max: 500 }).withMessage('Description cannot exceed 500 characters'),
-
-   body('client')
-      .optional()
-      .isMongoId().withMessage('Invalid Client ID format')
+const validateUpdateProject = [
+  validateMongoId('id'), // Validate the ID in the URL parameter
+  validateOptionalString('name', 3),
+  validateOptionalString('description', 10),
+  validateMongoIdBody('clientId', { optional: true }), // Allow updating client association
+  validateOptionalDate('startDate'),
+  validateOptionalDate('endDate'),
+  body('endDate').custom((value, { req }) => {
+    // Need to potentially fetch the project to compare dates if only one is provided
+    // This logic might be better placed in the controller or service layer after fetching the project
+    // For simplicity here, we only validate if both dates are present in the request
+    const startDate = req.body.startDate;
+    if (value && startDate && new Date(value) < new Date(startDate)) {
+      throw new Error('End date cannot be before start date.');
+    }
+    // If only endDate is provided, we'd need the existing startDate to compare
+    // If only startDate is provided, we'd need the existing endDate to compare
+    return true;
+  }),
+  // Add custom validation for uniqueness if needed, similar to create but excluding self
+  handleValidationErrors,
 ];
 
-module.exports = {createProjectValidator, updateProjectValidator, validateMongoIdInParam}; // Export also de ID validator!
+/**
+ * Validation rules for operations requiring a project ID in the route parameter.
+ * @constant {Array<import('express-validator').ValidationChain | Function>}
+ */
+const validateProjectId = [validateMongoId('id'), handleValidationErrors];
+
+module.exports = {
+  validateCreateProject,
+  validateUpdateProject,
+  validateProjectId,
+};
