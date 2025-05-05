@@ -31,7 +31,8 @@ router.post(
  */
 router.get(
   '/',
-  clientController.getAllClients
+  clientController.getClients
+
 );
 
 /**
