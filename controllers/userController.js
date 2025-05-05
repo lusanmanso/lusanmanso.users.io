@@ -390,17 +390,14 @@ exports.requestPasswordReset = async (req, res) => {
     try {
         const { email } = req.body;
 
-        // Verificar que el email existe
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({ message: 'Email not found' });
         }
 
-        // Generar código de recuperación
         const resetCode = authService.generateVerificationCode();
         const resetExpires = Date.now() + 3600000; // 1 hora
 
-        // Guardar código en la base de datos
         user.passwordResetCode = resetCode;
         user.passwordResetExpires = resetExpires;
         await user.save();
@@ -474,22 +471,19 @@ exports.inviteTeamMember = async (req, res) => {
             return res.status(400).json({ message: 'Los usuarios invitados solo pueden tener rol "guest"' });
         }
 
-        // Obtener datos de la compañía del propietario
         const owner = await User.findById(ownerId);
         if (!owner || !owner.company) {
             return res.status(400).json({ message: 'Debe configurar los datos de su compañía antes de invitar miembros' });
         }
 
-        // Verificar si el email ya está registrado
         let invitedUser = await User.findOne({ email });
 
         if (invitedUser) {
-            // Si ya existe, asociarlo a la compañía
+
             invitedUser.role = 'guest';
             invitedUser.companyId = owner.company._id;
             await invitedUser.save();
 
-            // Enviar email de notificación
             try {
                 await handleEmail.sendInvitationEmail(
                     email,
@@ -529,7 +523,6 @@ exports.inviteTeamMember = async (req, res) => {
 
         await newUser.save();
 
-        // Enviar email de invitación
         try {
             await handleEmail.sendInvitationEmail(
                 email,
