@@ -1,16 +1,13 @@
 // File: routes/clientRoutes.js
 const express = require('express');
 const { param, check } = require('express-validator');
-const { createClientValidators, updateClientValidators } = require('../validators/clientValidators');
+const { validateCreateClient, validateUpdateClient, validateClientId } = require('../validators/clientValidators');
 const clientController = require('../controllers/clientController');
 const { auth } = require('../middleware/auth');
 // const { asyncHandler } = require('../middleware/handleError');
 
 const router = express.Router();
 router.use(auth); // Apply auth middleware to all routes
-
-// Validation for client ID in route params
-const validateMongoId = param('id').isMongoId().withMessage('Invalid client ID');
 
 /**
  * @route POST /api/client
@@ -19,9 +16,9 @@ const validateMongoId = param('id').isMongoId().withMessage('Invalid client ID')
  * @body { name: string, email: string, company?: string (ObjectId) }
  */
 router.post(
-  '/',
-  createClientValidators,
-  clientController.createClient
+   '/',
+   validateCreateClient,
+   clientController.createClient
 );
 
 /**
@@ -30,8 +27,8 @@ router.post(
  * @access Private
  */
 router.get(
-  '/',
-  clientController.getClients
+   '/',
+   clientController.getClients
 
 );
 
@@ -41,8 +38,8 @@ router.get(
  * @access Private
  */
 router.get(
-  '/archived',
-  clientController.getArchivedClients
+   '/archived',
+   clientController.getArchivedClients
 );
 
 /**
@@ -52,9 +49,9 @@ router.get(
  * @param id (Client's MongoDB ObjectId)
  */
 router.get(
-  '/:id',
-  validateMongoId,
-  clientController.getClientById
+   '/:id',
+   validateClientId,
+   clientController.getClientById
 );
 
 /**
@@ -65,17 +62,15 @@ router.get(
  * @body { name?: string, email?: string, company?: string (ObjectId) }
  */
 router.put(
-  '/:id',
-  validateMongoId,
-  updateClientValidators,
-  clientController.updateClient
+   '/:id',
+   validateUpdateClient,
+   clientController.updateClient
 );
 // Alternatively support PATCH
 router.patch(
-  '/:id',
-   validateMongoId,
-  updateClientValidators,
-  clientController.updateClient
+   '/:id',
+   validateUpdateClient,
+   clientController.updateClient
 );
 
 /**
@@ -85,9 +80,9 @@ router.patch(
  * @param id (Client's MongoDB ObjectId)
  */
 router.patch(
-  '/:id/archive',
-  validateMongoId,
-  clientController.archiveClient
+   '/:id/archive',
+   validateClientId,
+   clientController.archiveClient
 );
 
 /**
@@ -97,9 +92,9 @@ router.patch(
  * @param id (Client's MongoDB ObjectId)
  */
 router.patch(
-  '/:id/recover',
-  validateMongoId,
-  clientController.recoverClient
+   '/:id/recover',
+   validateClientId,
+   clientController.recoverClient
 );
 
 
@@ -110,9 +105,9 @@ router.patch(
  * @param id (Client's MongoDB ObjectId)
  */
 router.delete(
-  '/:id',
-  validateMongoId,
-  clientController.deleteClient
+   '/:id',
+   validateClientId,
+   clientController.deleteClient
 );
 
 module.exports = router;
