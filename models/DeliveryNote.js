@@ -2,142 +2,136 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-// Subdocument for delivery note items (hours or materials)
+/**
+ * Schema for individual items within a delivery note (hours or materials).
+ * @typedef {Object} DeliveryNoteItem
+ * @property {string} description - Description of the item/work.
+ * @property {number} quantity - Quantity or hours.
+ * @property {number} [unitPrice] - Unit price (for materials/services). Optional.
+ * @property {string} [person] - Person who performed the hours (for hours type). Optional.
+ */
 const DeliveryNoteItemSchema = new Schema({
-  type: {
-    type: String,
-    enum: ['hours', 'material'],
-    required: [true, 'Item type is required (hours or material)']
-  },
-  description: {
-    type: String,
-    required: [true, 'Item description is required'],
-    trim: true,
-    maxlength: [200, 'Item description cannot be more than 200 characters']
-  },
-  quantity: {
-    type: Number,
-    required: [true, 'Item quantity is required'],
-    min: [0.01, 'Quantity must be positive'] // Adjust as needed (e.g., allow zero?)
-  },
-  unitPrice: { // Unit price/hourly rate (optional)
-    type: Number,
-    min: [0, 'Unit price cannot be negative'],
-    default: null
-  },
-  person: { // Name of the person (relevant if type is 'hours')
-    type: String,
-    trim: true,
-    maxlength: [100, 'Person name cannot be more than 100 characters'],
-    default: null
-  }
-  // We don't include 'total' here - it can be calculated on demand or when generating the PDF
-}, { _id: true }); // Give IDs to subdocuments
-
-const DeliveryNoteSchema = new Schema({
-  deliveryNoteNumber: { // Delivery note number (could be auto-generated)
-    type: String,
-    // required: true, // Optional: could generate this in the controller/service
-    trim: true,
-    // unique: true // ? should this be unique globally or per client/project
-  },
-  project: { // Project this delivery note belongs to
-    type: Schema.Types.ObjectId,
-    ref: 'Project',
-    required: [true, 'Project is required for the delivery note']
-  },
-  // We could get createdBy and client through project.populate,
-  // but having createdBy here makes some queries/permissions easier.
-  createdBy: {
-    type: Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  date: { // Date of the delivery note
-    type: Date,
-    required: [true, 'Delivery note date is required'],
-    default: Date.now
-  },
-  items: { // Array of items (hours/materials)
-    type: [DeliveryNoteItemSchema], // Uses the subdocument defined above
-    required: true,
-    validate: [ // Ensures the array isn't empty
-      { validator: (val) => val.length > 0, msg: 'Delivery note must have at least one item.' }
-    ]
-  },
-  status: { // Status of the delivery note
-    type: String,
-    enum: ['draft', 'pending_signature', 'signed', 'invoiced', 'cancelled'],
-    default: 'draft'
-  },
-  isSigned: {
-    type: Boolean,
-    default: false
-  },
-  signedAt: {
-    type: Date,
-    default: null
-  },
-  signatureUrl: { // URL of the signature image (in IPFS or other cloud storage)
-    type: String,
-    trim: true,
-    default: null
-  },
-  pdfUrl: { // URL of the signed PDF (in cloud storage)
-    type: String,
-    trim: true,
-    default: null
-  },
-  notes: { // Additional notes for the delivery note
+   description: {
+      type: String,
+      required: [true, 'Item description is required'],
+      trim: true,
+   },
+   quantity: {
+      type: Number,
+      required: [true, 'Item quantity/hours is required'],
+      min: [0.01, 'Quantity must be positive'], // Allows for fractional hours/quantities if needed
+   },
+   unitPrice: { // Optional: Primarily for materials/services, could be hourly rate
+      type: Number,
+      min: [0, 'Unit price cannot be negative'],
+      default: null,
+   },
+   person: { // Optional: Relevant for 'hours' type items
       type: String,
       trim: true,
-      maxLength: [500, 'Notes cannot exceed 500 characters'],
+      default: null,
+   },
+   // Consider adding 'type' ('hours'/'material') if needed, though the PDF implies it can contain both mixed or just one type.
+   // The current structure allows flexibility.
+}, { _id: true }); // Enable IDs for subdocuments if needed later
+
+/**
+ * Schema definition for Delivery Notes.
+ * @typedef {Object} DeliveryNote
+ * @property {string} deliveryNoteNumber - Unique identifier for the delivery note (likely unique per user/project).
+ * @property {Schema.Types.ObjectId} project - Reference to the Project this note belongs to.
+ * @property {Schema.Types.ObjectId} createdBy - Reference to the User who created the note.
+ * @property {Schema.Types.ObjectId} client - Reference to the Client associated with the project/note. Added for easier PDF generation and querying.
+ * @property {Date} date - Date the delivery note was issued.
+ * @property {Array<DeliveryNoteItem>} items - Array containing details of hours or materials. Can be simple (one entry) or multiple[cite: 6].
+ * @property {boolean} isSigned - Flag indicating if the note has been signed.
+ * @property {Date} [signedAt] - Timestamp when the note was signed.
+ * @property {string} [signatureUrl] - URL (potentially IPFS CID) of the signature image[cite: 8].
+ * @property {string} [pdfUrl] - URL (potentially IPFS CID) of the generated PDF after signing[cite: 8].
+ * @property {string} [notes] - Optional additional notes.
+ */
+const DeliveryNoteSchema = new Schema({
+   deliveryNoteNumber: { // Consider if this should be auto-generated or user-provided
+      type: String,
+      required: true,
+      trim: true,
+   },
+   project: {
+      type: Schema.Types.ObjectId,
+      ref: 'Project', // Reference to the Project model
+      required: [true, 'Project is required for the delivery note']
+   },
+   createdBy: { // Store the creator for permission checks
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true
+   },
+   client: { // Added for convenience, derived from project initially but stored
+      type: Schema.Types.ObjectId,
+      ref: 'Client',
+      required: true
+   },
+   date: {
+      type: Date,
+      required: [true, 'Delivery note date is required'],
+      default: Date.now
+   },
+   items: { // Array for hours and/or materials [cite: 6]
+      type: [DeliveryNoteItemSchema],
+      required: true,
+      validate: [
+         { validator: (val) => val.length > 0, msg: 'Delivery note must have at least one item.' }
+      ]
+   },
+   isSigned: {
+      type: Boolean,
+      default: false
+   },
+   signedAt: { // Timestamp of signing
+      type: Date,
       default: null
-  }
+   },
+   signatureUrl: { // IPFS CID or other cloud URL for the signature image [cite: 8]
+      type: String,
+      trim: true,
+      default: null
+   },
+   pdfUrl: { // IPFS CID or other cloud URL for the signed PDF [cite: 8]
+      type: String,
+      trim: true,
+      default: null
+   },
+   notes: {
+      type: String,
+      trim: true,
+      default: null
+   }
 }, {
-  timestamps: true // createdAt, updatedAt
+   timestamps: true // Adds createdAt and updatedAt automatically
 });
 
-// Middleware to ensure 'createdBy' is set correctly
-// and to validate that the referenced project exists and belongs to the user
-DeliveryNoteSchema.pre('validate', async function(next) {
-  if (this.isNew) {
-    // If createdBy isn't provided, we could try to get it from the project (requires previous populate)
-    // But it's safer to ensure it comes from the controller based on req.user.id
-    if (!this.createdBy) {
-       return next(new Error('createdBy field is missing.'));
-    }
+// Index to potentially speed up lookups by user and project
+DeliveryNoteSchema.index({ createdBy: 1, project: 1, date: -1 });
+// Unique index for delivery note number per user (adjust if uniqueness scope is different)
+DeliveryNoteSchema.index({ createdBy: 1, deliveryNoteNumber: 1 }, { unique: true });
 
-    // Verify that the project exists and belongs to the user
-    try {
-        const Project = mongoose.model('Project');
-        // Find the project by ID and verify that createdBy matches
-        // and that the project isn't archived
-        const projectExists = await Project.findOne({
-            _id: this.project,
-            createdBy: this.createdBy,
-            archived: false // Can't create delivery notes for archived projects
-        });
-
-        if (!projectExists) {
-            const error = new Error('Project not found, archived, or does not belong to the user.');
-            error.statusCode = 404; // Not Found or 400 Bad Request
-            error.type = 'validation';
-            return next(error);
-        }
-    } catch (err) {
-        // Catch search errors
-        const error = new Error('Error validating project reference.');
-        error.statusCode = 400;
-        error.type = 'validation';
-        return next(error);
-    }
-  }
-  next();
+// Pre-save hook to ensure the client is associated with the project's creator
+DeliveryNoteSchema.pre('validate', async function (next) {
+   if (this.isNew || this.isModified('project')) {
+      try {
+         const Project = mongoose.model('Project');
+         // Fetch the project to get the client and verify ownership
+         const projectDoc = await Project.findOne({ _id: this.project, createdBy: this.createdBy, archived: false });
+         if (!projectDoc) {
+            return next(new Error('Project not found, archived, or does not belong to the user.'));
+         }
+         // Automatically set the client based on the project
+         this.client = projectDoc.client;
+      } catch (err) {
+         return next(err);
+      }
+   }
+   next();
 });
-
-// Add indexes if needed
-DeliveryNoteSchema.index({ project: 1, date: -1 });
-DeliveryNoteSchema.index({ createdBy: 1, date: -1 });
 
 module.exports = mongoose.model('DeliveryNote', DeliveryNoteSchema);
