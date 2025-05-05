@@ -11,13 +11,13 @@ const { handleError } = require('../middleware/handleError');
  * @param {import('express').NextFunction} next - The Express next middleware function.
  */
 const handleValidationErrors = (req, res, next) => {
-  try {
-    validationResult(req).throw();
-    return next();
-  } catch (err) {
-    // Use the existing handleError middleware for consistent error responses
-    return handleError(res, 'VALIDATION_ERROR', 400, err.errors);
-  }
+   try {
+      validationResult(req).throw();
+      return next();
+   } catch (err) {
+      // Use the existing handleError middleware for consistent error responses
+      return handleError(res, 'VALIDATION_ERROR', 400, err.errors);
+   }
 };
 
 /**
@@ -27,11 +27,11 @@ const handleValidationErrors = (req, res, next) => {
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateMongoId = (fieldName) =>
-  param(fieldName)
-    .notEmpty()
-    .withMessage(`${fieldName} cannot be empty.`)
-    .isMongoId()
-    .withMessage(`${fieldName} must be a valid MongoDB ObjectId.`);
+   param(fieldName)
+      .notEmpty()
+      .withMessage(`${fieldName} cannot be empty.`)
+      .isMongoId()
+      .withMessage(`${fieldName} must be a valid MongoDB ObjectId.`);
 
 /**
  * Creates a validation chain to check if a field in the request body is a valid MongoDB ObjectId.
@@ -42,15 +42,15 @@ const validateMongoId = (fieldName) =>
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateMongoIdBody = (fieldName, { optional = false } = {}) => {
-  let validator = body(fieldName);
-  if (optional) {
-    validator = validator.optional({ checkFalsy: true }); // Allows null or empty string if optional
-  } else {
-    validator = validator.notEmpty().withMessage(`${fieldName} cannot be empty.`);
-  }
-  return validator
-    .isMongoId()
-    .withMessage(`${fieldName} must be a valid MongoDB ObjectId.`);
+   let validator = body(fieldName);
+   if (optional) {
+      validator = validator.optional({ checkFalsy: true }); // Allows null or empty string if optional
+   } else {
+      validator = validator.notEmpty().withMessage(`${fieldName} cannot be empty.`);
+   }
+   return validator
+      .isMongoId()
+      .withMessage(`${fieldName} must be a valid MongoDB ObjectId.`);
 };
 
 /**
@@ -61,18 +61,17 @@ const validateMongoIdBody = (fieldName, { optional = false } = {}) => {
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateRequiredString = (fieldName, minLength = 1) =>
-  body(fieldName)
-    .notEmpty()
-    .withMessage(`${fieldName} cannot be empty.`)
-    .isString()
-    .withMessage(`${fieldName} must be a string.`)
-    .isLength({ min: minLength })
-    .withMessage(
-      `${fieldName} must be at least ${minLength} character${
-        minLength > 1 ? 's' : ''
-      } long.`
-    )
-    .trim();
+   body(fieldName)
+      .notEmpty()
+      .withMessage(`${fieldName} cannot be empty.`)
+      .isString()
+      .withMessage(`${fieldName} must be a string.`)
+      .isLength({ min: minLength })
+      .withMessage(
+         `${fieldName} must be at least ${minLength} character${minLength > 1 ? 's' : ''
+         } long.`
+      )
+      .trim();
 
 /**
  * Creates a validation chain for an optional string field in the request body.
@@ -82,17 +81,16 @@ const validateRequiredString = (fieldName, minLength = 1) =>
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateOptionalString = (fieldName, minLength = 1) =>
-  body(fieldName)
-    .optional({ checkFalsy: true }) // Allows null, undefined, ''
-    .isString()
-    .withMessage(`${fieldName} must be a string.`)
-    .isLength({ min: minLength })
-    .withMessage(
-      `${fieldName} must be at least ${minLength} character${
-        minLength > 1 ? 's' : ''
-      } long.`
-    )
-    .trim();
+   body(fieldName)
+      .optional({ checkFalsy: true }) // Allows null, undefined, ''
+      .isString()
+      .withMessage(`${fieldName} must be a string.`)
+      .isLength({ min: minLength })
+      .withMessage(
+         `${fieldName} must be at least ${minLength} character${minLength > 1 ? 's' : ''
+         } long.`
+      )
+      .trim();
 
 /**
  * Creates a validation chain for a required number field in the request body.
@@ -103,23 +101,23 @@ const validateOptionalString = (fieldName, minLength = 1) =>
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateRequiredNumber = (fieldName, min, max) => {
-  let validator = body(fieldName)
-    .notEmpty()
-    .withMessage(`${fieldName} cannot be empty.`)
-    .isNumeric()
-    .withMessage(`${fieldName} must be a number.`);
+   let validator = body(fieldName)
+      .notEmpty()
+      .withMessage(`${fieldName} cannot be empty.`)
+      .isNumeric()
+      .withMessage(`${fieldName} must be a number.`);
 
-  if (min !== undefined) {
-    validator = validator
-      .isFloat({ min })
-      .withMessage(`${fieldName} must be at least ${min}.`);
-  }
-  if (max !== undefined) {
-    validator = validator
-      .isFloat({ max })
-      .withMessage(`${fieldName} must be at most ${max}.`);
-  }
-  return validator;
+   if (min !== undefined) {
+      validator = validator
+         .isFloat({ min })
+         .withMessage(`${fieldName} must be at least ${min}.`);
+   }
+   if (max !== undefined) {
+      validator = validator
+         .isFloat({ max })
+         .withMessage(`${fieldName} must be at most ${max}.`);
+   }
+   return validator;
 };
 
 /**
@@ -131,22 +129,22 @@ const validateRequiredNumber = (fieldName, min, max) => {
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateOptionalNumber = (fieldName, min, max) => {
-  let validator = body(fieldName)
-    .optional({ checkFalsy: true }) // Allows null, undefined, 0, ''
-    .isNumeric()
-    .withMessage(`${fieldName} must be a number.`);
+   let validator = body(fieldName)
+      .optional({ checkFalsy: true }) // Allows null, undefined, 0, ''
+      .isNumeric()
+      .withMessage(`${fieldName} must be a number.`);
 
-  if (min !== undefined) {
-    validator = validator
-      .isFloat({ min })
-      .withMessage(`${fieldName} must be at least ${min}.`);
-  }
-  if (max !== undefined) {
-    validator = validator
-      .isFloat({ max })
-      .withMessage(`${fieldName} must be at most ${max}.`);
-  }
-  return validator;
+   if (min !== undefined) {
+      validator = validator
+         .isFloat({ min })
+         .withMessage(`${fieldName} must be at least ${min}.`);
+   }
+   if (max !== undefined) {
+      validator = validator
+         .isFloat({ max })
+         .withMessage(`${fieldName} must be at most ${max}.`);
+   }
+   return validator;
 };
 
 /**
@@ -156,11 +154,11 @@ const validateOptionalNumber = (fieldName, min, max) => {
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateRequiredBoolean = (fieldName) =>
-  body(fieldName)
-    .notEmpty()
-    .withMessage(`${fieldName} cannot be empty.`)
-    .isBoolean()
-    .withMessage(`${fieldName} must be a boolean (true or false).`);
+   body(fieldName)
+      .notEmpty()
+      .withMessage(`${fieldName} cannot be empty.`)
+      .isBoolean()
+      .withMessage(`${fieldName} must be a boolean (true or false).`);
 
 /**
  * Creates a validation chain for an optional boolean field in the request body.
@@ -169,10 +167,10 @@ const validateRequiredBoolean = (fieldName) =>
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateOptionalBoolean = (fieldName) =>
-  body(fieldName)
-    .optional()
-    .isBoolean()
-    .withMessage(`${fieldName} must be a boolean (true or false).`);
+   body(fieldName)
+      .optional()
+      .isBoolean()
+      .withMessage(`${fieldName} must be a boolean (true or false).`);
 
 /**
  * Creates a validation chain for a required date field in the request body.
@@ -181,12 +179,12 @@ const validateOptionalBoolean = (fieldName) =>
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateRequiredDate = (fieldName) =>
-  body(fieldName)
-    .notEmpty()
-    .withMessage(`${fieldName} cannot be empty.`)
-    .isISO8601()
-    .withMessage(`${fieldName} must be a valid date in ISO8601 format (YYYY-MM-DD).`)
-    .toDate(); // Convert to Date object
+   body(fieldName)
+      .notEmpty()
+      .withMessage(`${fieldName} cannot be empty.`)
+      .isISO8601()
+      .withMessage(`${fieldName} must be a valid date in ISO8601 format (YYYY-MM-DD).`)
+      .toDate(); // Convert to Date object
 
 /**
  * Creates a validation chain for an optional date field in the request body.
@@ -195,22 +193,22 @@ const validateRequiredDate = (fieldName) =>
  * @returns {import('express-validator').ValidationChain} - The express-validator validation chain.
  */
 const validateOptionalDate = (fieldName) =>
-  body(fieldName)
-    .optional({ checkFalsy: true }) // Allows null, undefined, ''
-    .isISO8601()
-    .withMessage(`${fieldName} must be a valid date in ISO8601 format (YYYY-MM-DD).`)
-    .toDate(); // Convert to Date object
+   body(fieldName)
+      .optional({ checkFalsy: true }) // Allows null, undefined, ''
+      .isISO8601()
+      .withMessage(`${fieldName} must be a valid date in ISO8601 format (YYYY-MM-DD).`)
+      .toDate(); // Convert to Date object
 
 module.exports = {
-  handleValidationErrors,
-  validateMongoId,
-  validateMongoIdBody,
-  validateRequiredString,
-  validateOptionalString,
-  validateRequiredNumber,
-  validateOptionalNumber,
-  validateRequiredBoolean,
-  validateOptionalBoolean,
-  validateRequiredDate,
-  validateOptionalDate,
+   handleValidationErrors,
+   validateMongoId,
+   validateMongoIdBody,
+   validateRequiredString,
+   validateOptionalString,
+   validateRequiredNumber,
+   validateOptionalNumber,
+   validateRequiredBoolean,
+   validateOptionalBoolean,
+   validateRequiredDate,
+   validateOptionalDate,
 };
