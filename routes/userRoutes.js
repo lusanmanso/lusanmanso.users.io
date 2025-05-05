@@ -1,6 +1,6 @@
 // File: routes/userRoutes.js
 const express = require('express');
-const { validateEmail, validatePassword, validateVerificationCode, validatePersonalData, validateCompanyData } = require('../validators/userValidators');
+const { validateEmail, validatePassword, validateVerificationCode, validatePersonalData, validateCompanyData, validateInviteUser, validateForgotPassword, validateUpdateCompany, validateUpdateUser, validateUserLogin, validateEmailVerification, validateUserRegistration, validateResetPassword } = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
 const { auth } = require('../middleware/auth');
@@ -16,7 +16,7 @@ const router = express.Router();
  */
 router.post(
    '/register',
-   [validateEmail, validatePassword],
+   validateUserRegistration,
    userController.registerUser
 );
 
@@ -27,7 +27,7 @@ router.post(
  */
 router.put(
    '/validation',
-   [auth, validateVerificationCode],
+   [auth, validateEmailVerification],
    userController.verifyEmail
 );
 
@@ -38,7 +38,7 @@ router.put(
  */
 router.post(
    '/login',
-   [validateEmail, validatePassword],
+   validateUserLogin,
    userController.loginUser
 );
 
@@ -60,7 +60,7 @@ router.get(
  */
 router.put(
    '/',
-   [auth, ...validatePersonalData],
+   [auth, ...validateUpdateUser],
    userController.updatePersonalData
 );
 
@@ -71,7 +71,7 @@ router.put(
  */
 router.patch(
    '/company',
-   [auth, ...validateCompanyData],
+   [auth, ...validateUpdateCompany],
    userController.updateCompanyData
 );
 
@@ -97,16 +97,15 @@ router.delete(
    userController.deleteUser
 );
 
-// TODO - Comentar algo lol
 router.post(
    '/recover-password',
-   validateEmail,
+   validateForgotPassword,
    userController.requestPasswordReset
 );
 
 router.post(
    '/reset-password',
-   validatePassword,
+   validateResetPassword,
    userController.resetPassword
 );
 
@@ -117,7 +116,7 @@ router.post(
  */
 router.post(
    '/invite',
-   [auth, validateEmail],
+   [auth, validateInviteUser],
    userController.inviteTeamMember
 );
 
