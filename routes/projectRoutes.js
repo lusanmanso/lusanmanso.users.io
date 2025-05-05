@@ -14,7 +14,10 @@ router.use(auth); // Apply auth middleware to all routes
  * @desc Create new project
  * @access Private
  */
-router.post('/', createProjectValidators, asyncHandler(projectController.createProject));
+router.post('/',
+   createProjectValidators,
+   asyncHandler(projectController.createProject)
+);
 
 /**
  * @route GET /api/project
