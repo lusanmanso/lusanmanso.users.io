@@ -3,6 +3,7 @@ const express = require('express');
 const userRoutes = require('./userRoutes');
 const clientRoutes = require('./clientRoutes');
 const projectRoutes = require('./projectRoutes');
+const deliveryNoteRoutes = require('./deliveryNoteRoutes');
 
 /**
  * Initialize all API routes
@@ -15,8 +16,8 @@ function initRoutes(app) {
   app.use('/api/client', clientRoutes);
    // Project routes
    app.use('/api/project', projectRoutes);
-
-  // Add other route groups here as application grows
+   // Delivery Note routes
+   app.use('/api/deliverynote', require('./deliveryNoteRoutes'));
 
   // Main API route - shows available endpoints
   app.get('/api', (req, res) => {
@@ -27,6 +28,7 @@ function initRoutes(app) {
         users: '/api/user',
         clients: '/api/client',
         projects: '/api/project',
+        deliveryNotes: '/api/deliverynote',
       }
     });
   });
