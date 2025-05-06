@@ -19,6 +19,31 @@ function initRoutes(app) {
    // Delivery Note routes
    app.use('/api/deliverynote', require('./deliveryNoteRoutes'));
 
+  /**
+   * @openapi
+   * tags:
+   *   - name: General
+   *     description: General API endpoints (info, welcome)
+   */
+
+  /**
+   * @openapi
+   * /api:
+   *   get:
+   *     tags:
+   *       - General
+   *     summary: Main API route - shows available endpoints
+   *     description: Provides application info and available endpoints.
+   *     responses:
+   *       '200':
+   *         description: API info retrieved successfully.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/ApiInfo'
+   *       '500':
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   // Main API route - shows available endpoints
   app.get('/api', (req, res) => {
     res.json({
@@ -33,6 +58,24 @@ function initRoutes(app) {
     });
   });
 
+  /**
+   * @openapi
+   * /:
+   *   get:
+   *     tags:
+   *       - General
+   *     summary: Main root route
+   *     description: Welcome message and API base path.
+   *     responses:
+   *       '200':
+   *         description: Welcome message.
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/RootInfo'
+   *       '500':
+   *         $ref: '#/components/responses/InternalServerError'
+   */
   // Main route
   app.get('/', (req, res) => {
     res.json({
