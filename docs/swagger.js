@@ -214,6 +214,15 @@ const options = {
                 createdAt: { type: 'string', format: 'date-time' },
                 updatedAt: { type: 'string', format: 'date-time' }
               }
+            },
+            // Add generic Error schema for response references
+            Error: {
+              type: 'object',
+              required: ['message'],
+              properties: {
+                message: { type: 'string', example: 'Error description' },
+                errors: { type: 'array', items: { type: 'string' }, description: 'Optional list of error details' }
+              }
             }
         },
         responses: {
