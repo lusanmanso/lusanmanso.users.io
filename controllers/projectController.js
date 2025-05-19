@@ -2,8 +2,7 @@
 const { validationResult } = require('express-validator');
 const Project = require('../models/Project');
 const Client = require('../models/Client');
-// Asegúrate de tener el modelo DeliveryNote si vas a implementar la comprobación
-// const DeliveryNote = require('../models/DeliveryNote');
+const DeliveryNote = require('../models/DeliveryNote');
 const { ApiError } = require('../middleware/handleError');
 
 /**
@@ -175,15 +174,12 @@ exports.deleteProject = async (req, res) => {
       throw new ApiError(404, 'Project not found or you do not have permission to delete it', 'not_found');
   }
 
-  // 2. Comprobar dependencias (Albaranes) - TODO: ¡DESCOMENTAR CUANDO EXISTA DeliveryNote!
-  /*
-  const DeliveryNote = require('../models/DeliveryNote'); // Asegúrate de importar DeliveryNote
+  const DeliveryNote = require('../models/DeliveryNote');
   const associatedNotesCount = await DeliveryNote.countDocuments({ project: projectId });
   if (associatedNotesCount > 0) {
-      // Podrías añadir lógica para comprobar si están firmados
+
       throw new ApiError(409, `Cannot delete project: ${associatedNotesCount} associated delivery note(s) exist.`, 'dependency_conflict');
   }
-  */
 
   const result = await Project.deleteOne({ _id: projectId, createdBy: userId });
 
