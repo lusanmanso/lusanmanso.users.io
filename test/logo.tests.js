@@ -38,14 +38,14 @@ describe('Logo API Endpoints', () => {
         filename: 'test-logo.png',
         path: '/tmp/test-logo.png'
       };
-      
+
       // Act
       const response = await request(app)
         .post('/api/user/logo')
         .set('Authorization', `Bearer mockToken`)
         .set('x-test-user-id', userId)
         .attach('logo', Buffer.from('mock-image'), 'test-logo.png'); // Mock file upload
-      
+
       // Assert
       expect(response.status).toBe(404);
       expect(response.body.message).toContain('User not found');
@@ -68,14 +68,14 @@ describe('Logo API Endpoints', () => {
       path.join.mockReturnValue('/mock/path/to/old-logo.png');
       fs.existsSync.mockReturnValue(true);
       fs.unlinkSync.mockImplementation(() => {});
-      
+
       // Act
       const response = await request(app)
         .post('/api/user/logo')
         .set('Authorization', `Bearer mockToken`)
         .set('x-test-user-id', userId)
         .attach('logo', Buffer.from('mock-image'), 'new-logo.png');
-      
+
       // Assert
       expect(fs.existsSync).toHaveBeenCalled();
       expect(fs.unlinkSync).toHaveBeenCalledWith('/mock/path/to/old-logo.png');
@@ -94,14 +94,14 @@ describe('Logo API Endpoints', () => {
         save: jest.fn().mockResolvedValue(true)
       };
       User.findById.mockResolvedValue(user);
-      
+
       // Act
       const response = await request(app)
         .post('/api/user/logo')
         .set('Authorization', `Bearer mockToken`)
         .set('x-test-user-id', userId)
         .attach('logo', Buffer.from('mock-image'), 'new-logo.png');
-      
+
       // Assert
       expect(user.save).toHaveBeenCalled();
       expect(response.status).toBe(200);
@@ -115,14 +115,14 @@ describe('Logo API Endpoints', () => {
       // Arrange
       const userId = 'mockUserId';
       User.findById.mockRejectedValue(new Error('Database error'));
-      
+
       // Act
       const response = await request(app)
         .post('/api/user/logo')
         .set('Authorization', `Bearer mockToken`)
         .set('x-test-user-id', userId)
         .attach('logo', Buffer.from('mock-image'), 'logo.png');
-      
+
       // Assert
       expect(response.status).toBe(500);
       expect(response.body.message).toContain('Server error');
