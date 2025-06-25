@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "Este proyecto implementa una API RESTful para la gestión de usuarios utilizando Node.js y Express. La API proporciona funcionalidades completas para registro, autenticación, validación y gestión de información de usuarios.",
   "main": "index.js",
-   "scripts": {
-   "start": "node --watch server.js",
-   "test": "cross-env NODE_ENV=test jest --verbose --detectOpenHandles"
-   },
+  "scripts": {
+    "start": "node --watch server.js",
+    "test": "cross-env NODE_ENV=test jest"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/lusanmanso/lusanmanso.users.io.git"
