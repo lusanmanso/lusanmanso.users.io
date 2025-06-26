@@ -508,7 +508,7 @@ exports.inviteTeamMember = async (req, res) => {
         const tempPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await authService.hashPassword(tempPassword);
 
-        // Create new user with guest role
+        // Create new user with guest role   
         const verificationCode = authService.generateVerificationCode();
         const newUser = new User({
             email,
