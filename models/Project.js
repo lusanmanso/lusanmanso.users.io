@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Schema = mongoose.Schema;
+const basePlugin = require('./plugins/basePlugin');
 
 const ProjectSchema = new Schema({
    name: {
@@ -30,24 +30,16 @@ const ProjectSchema = new Schema({
    }
 }, { timestamps: true });
 
-// Unique index to prevent duplicate project names for the same client
-ProjectSchema.index({ createdBy: 1, client: 1, name: 1 }, { unique: true,  message: 'Project name must be unique for this client and user.' });
-
-// Validate if referenced client exists before saving
-ProjectSchema.pre('save', async function(next) {
-   if (this.isModified('client') || this.isNew) {
-      try {
-         const Client = mongoose.model('Client');
-         const clientExists = await Client.findById(this.client);
-         if (!clientExists) {
-            const error = new Error('Client does not exist');
-            error.status = 400;
-            error.type = 'validation';
-            return next(error);
-         }
-      } catch (err) { return next(err); }
-   }
-   next();
+projectSchema.plugin(basePlugin, {
+  addTimestamps: true,
+  addArchived: true,
+  addCreatedBy: true,
+  addCompany: true,
+  autoAssignCompany: true
 });
+
+// Unique index to prevent duplicate projects for the same client and user
+projectSchema.index({ name: 1, client: 1, createdBy: 1 }, { unique: true });
+projectSchema.index({ status: 1, archived: 1 });
 
 module.exports = mongoose.model('Project', ProjectSchema);
