@@ -1,31 +1,37 @@
-// models/Client.js
+// File: models/Client.js
 const mongoose = require('mongoose');
-const basePlugin = require('./plugins/basePlugin');
+const Schema = mongoose.Schema;
 
-const clientSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
+const ClientSchema = new Schema({
+   // Basic fields for client
+  name:{
+      type: String,
+      required: true,
+      trim: true
+   },
   email: {
-    type: String,
-    required: true,
-    lowercase: true,
-    trim: true
-  },
-  cif: String,
-  phone: String,
-  address: {
-    street: String,
-    city: String,
-    postalCode: String,
-    province: String,
-    country: String
-  }
-});
+      type: String,
+      required: true,
+      lowercase: true,
+      trim: true
+   },
+  company: {
+      type: Schema.Types.ObjectId,
+      ref: 'Company',
+      required: false
+   },
 
-clientSchema.plugin(basePlugin);
-clientSchema.index({ createdBy: 1, email: 1 }, { unique: true });
+  createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: 'User', required: true
+   },
+   archived: {
+      type: Boolean,
+      default: false
+   }
+}, { timestamps: true });
 
-module.exports = mongoose.model('Client', clientSchema);
+// Unique index to prevent duplicate emails
+ClientSchema.index({ createdBy: 1, email: 1 }, { unique: true });
+
+module.exports = mongoose.model('Client', ClientSchema);
