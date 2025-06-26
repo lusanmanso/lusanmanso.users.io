@@ -21,8 +21,6 @@ const validateCreateClient = [
     .normalizeEmail()
     .custom(async (email, { req }) => {
       // Check if client email already exists for this user/company
-      // Assuming req.user.id contains the logged-in user's ID
-      // Or req.user.companyId if checking within a company
       const userId = req.user?.id;
       if (!userId) {
         // This should ideally not happen if auth middleware runs first
@@ -33,10 +31,12 @@ const validateCreateClient = [
         return Promise.reject('Client with this email already exists for this user.');
       }
     }),
-  validateOptionalString('phone'),
+   body('phone')
+      .optional({ checkFalsy: true }) // Allows the field to be null, undefined or empty string
+      .matches(/^\d{9}$/)
+      .withMessage('Phone number must be exactly 9 digits long and contain only numbers.'),
   validateOptionalString('address'),
   validateOptionalString('cif', 9), // Assuming CIF has a typical length
-  // Add other client fields as needed
   handleValidationErrors,
 ];
 
@@ -63,7 +63,7 @@ const validateUpdateClient = [
       // Check if the new email is already used by *another* client of the same user
       const existingClient = await Client.findOne({
         email,
-        userId,
+        createdBy: userId,
         _id: { $ne: clientId }, // Exclude the current client being updated
       });
       if (existingClient) {
@@ -72,10 +72,13 @@ const validateUpdateClient = [
         );
       }
     }),
-  validateOptionalString('phone'),
+   body('phone')
+      .optional({ checkFalsy: true }) // Allows the field to be null, undefined or empty string
+      .matches(/^\d{9}$/)
+      .withMessage('Phone number must be exactly 9 digits long and contain only numbers.'),
   validateOptionalString('address'),
   validateOptionalString('cif', 9),
-  // Add other updatable client fields as needed
+
   handleValidationErrors,
 ];
 
