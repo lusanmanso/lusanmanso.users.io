@@ -1,6 +1,7 @@
 // File: controllers/clientController.js
 const validationResult = require('express-validator').validationResult; // TODO: .validationResult es necesario?
 const Client = require('../models/Client');
+const Project = require('../models/Project');
 const { ApiError } = require('../middleware/handleError');
 
 /**
@@ -146,7 +147,7 @@ exports.archiveClient = async (req, res) => {
 };
 
 /**
- * @desc Delete a client (hard delete)
+ * @desc Delete a client permanently (hard delete)
  * @route DELETE /api/client/:id
  * @access Private
  */
@@ -154,11 +155,30 @@ exports.deleteClient = async (req, res) => {
    const userId = req.user.id;
    const clientId = req.params.id;
 
-   const result = await Client.deleteOne({ _id: clientId, createdBy: userId });
+   // Verify if the client exists and belongs to the user
+   const client = await Client.findOne({ _id: clientId, createdBy: userId });
+
+   if (!client) {
+      throw new ApiError(404, 'Client not found or you do not have permission', 'not_found');
+   }
 
    if (result.deleteCount === 0) {
       throw new ApiError(404, 'Client not found', 'client', { errors: [{ msg: 'Client not found' }] });
    }
+
+   const associatedProjects = await Project.findOne({ client: clientId });
+
+   if (associatedProjects) {
+      throw new ApiError(
+          409, // Nota: 409 Conflict es un buen código para indicar que la solicitud no puede ser completada debido a un conflicto con el estado actual del recurso.
+          'Cannot delete client: Client has associated projects.',
+          'conflict',
+          { errors: [{ msg: 'Client has existing projects and cannot be deleted permanently. Please delete all associated projects first.' }] }
+      );
+   }
+
+   // If no projects are associated, delete the client
+   const result = await Client.deleteOne({ _id: clientId, createdBy: userId });
 
    res.status(200).json({ message: 'Client deleted successfully' });
 };
