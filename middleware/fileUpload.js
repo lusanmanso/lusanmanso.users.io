@@ -5,13 +5,16 @@ const fs = require('fs').promises;
 const { ApiError } = require('./handleError');
 const config = require('../config/config');
 
+// Destiny route for uploads
+const uploadDir = config.storage.localPath;
+
 // Ensure upload directory exists
 const ensureUploadDir = async () => {
    try {
-     await fs.access(config.storage.localPath);
+     await fs.access(uploadDir);
    } catch (error) {
      // Directory does not exist: create
-     await fs.mkdir(config.storage.localPath, { recursive: true });
+     await fs.mkdir(uploadDir, { recursive: true });
    }
  };
 
@@ -35,8 +38,8 @@ const storage = multer.diskStorage({
 // File filter that allows only image
 const fileFilter = (req, file, cb) => {
    // Allowed MIME types of images
-   const allowedMimesTypes = ['image(jpeg']
-    if (file.mimetype.startsWith('image')) {
+   const allowedMimesTypes = ['image/jpeg', 'image/png', 'image/gif'];
+    if (file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
         cb(new Error('Not an image! Please upload an image.', false));
