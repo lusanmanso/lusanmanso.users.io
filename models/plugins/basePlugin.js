@@ -133,6 +133,48 @@
          return this.archived;
        };
 
-       
+       // Query helpers
+       /**
+        * Query helper to filter active documents (not archived)
+        */
+       schema.query.active = function() {
+         return this.where({archived: false});
+       };
+
+      /**
+      * Query helper para obtener solo documentos archivados
+      */
+      schema.query.archived = function() {
+      return this.where({ archived: true });
+      };
+
+
+      /**
+      * Query helper to filter by user
+      * @param {ObjectId|String} userId - Id of the user
+      */
+      schema.query.byUser = function(userId) {
+         return this.where({ createdBy: userId });
+      };
+
+      /**
+      * Query helper to filter by company
+      * @param {ObjectId|String} companyId - ID of the company
+      */
+      schema.query.byCompany = function(companyId) {
+         return this.where({ company: companyId });
+      };
+
+      /**
+      * Query helper to get recently created documents
+      * @param {Number} days - Number of days to filter by (default: 7)
+      */
+      schema.query.recent = function(days = 7) {
+         const date = new Date();
+         date.setDate(date.getDate() - days);
+         return this.where({ createdAt: { $gte: date } });
+      };
+
+   
 
    }
