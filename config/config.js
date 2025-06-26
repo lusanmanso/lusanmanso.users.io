@@ -9,7 +9,10 @@ const requiredEnvVars = [
    'EMAIL',
    'CLIENT_ID',
    'CLIENT_SECRET',
-   'REFRESH_TOKEN'
+   'REFRESH_TOKEN',
+   'PINATA_KEY',
+   'PINATA_SECRET',
+   'SLACK_WEBHOOK_URL'
 ];
 
 const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
