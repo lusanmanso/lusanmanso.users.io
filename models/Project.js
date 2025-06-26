@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const basePlugin = require('./plugins/basePlugin');
 
-const ProjectSchema = new Schema({
+const ProjectSchema = new mongoose.Schema({
    name: {
       type: String,
       required: [true, 'Project name is required'],
