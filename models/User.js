@@ -85,7 +85,7 @@ const UserSchema = new mongoose.Schema({
     },
     verificationCode: {
         type: String,
-        required: true
+        required: false
     },
     verificationAttempts: {
         type: Number,
