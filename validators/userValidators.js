@@ -37,6 +37,15 @@ const validateUserRegistration = [
     .withMessage(
       'Password must contain at least one uppercase letter, one lowercase letter, and one number.'
     ),
+   body('passwordConfirm')
+      .notEmpty()
+      .withMessage('Password confirmation is required.')
+      .custom((value, { req }) => {
+      if (value !== req.body.password) {
+         throw new Error('Passwords do not match.');
+      }
+      return true;
+   }),
   handleValidationErrors,
 ];
 
