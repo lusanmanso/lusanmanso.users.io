@@ -1,7 +1,6 @@
 // File: validators/commonValidators.js
 const { body, param, validationResult } = require('express-validator');
-const mongoose = require('mongoose');
-const { handleError } = require('../middleware/handleError');
+const { ApiError } = require('../middleware/handleError');
 
 /**
  * Middleware to handle validation errors from express-validator.
@@ -11,13 +10,19 @@ const { handleError } = require('../middleware/handleError');
  * @param {import('express').NextFunction} next - The Express next middleware function.
  */
 const handleValidationErrors = (req, res, next) => {
-   try {
-      validationResult(req).throw();
-      return next();
-   } catch (err) {
-      // Use the existing handleError middleware for consistent error responses
-      return handleError(res, 'VALIDATION_ERROR', 400, err.errors);
+   const errors = validationResult(req);
+
+   if (!errors.isEmpty()) {
+      const validationError = new ApiError(
+         400,
+         'Validation failed',
+         'VALIDATION_ERROR',
+         { errors: errors.array() }
+      );
+      return next(validationError);
    }
+
+   next();
 };
 
 /**
