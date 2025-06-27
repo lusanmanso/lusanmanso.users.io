@@ -5,6 +5,10 @@ module.exports = {
     "**/tests/**/*.js?(x)",
     "**/?(*.)+(spec|test).js?(x)"
   ],
+   testPathIgnorePatterns: [
+    "tests/setup.js",
+    "tests/teardown.js"
+  ],
   // Entorno de ejecución de los tests (nodejs es el predeterminado)
   testEnvironment: 'node',
   // Archivo que Jest ejecuta una vez antes de todas las suites de tests

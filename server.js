@@ -1,7 +1,8 @@
 // File: server.js
-require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
+const dotenv = require('dotenv');
 const path = require('path');
 const fs = require('fs');
 const connectDB = require('./config/mongo');
@@ -26,6 +27,13 @@ const ensureDirectories = () => {
   });
 };
 
+// Load environment variables depending on the environment
+if (process.env.NODE_ENV === 'test') {
+  dotenv.config({ path: '.env.test' });
+} else {
+  dotenv.config();
+}
+
 // Initialize Express
 const app = express();
 
@@ -35,6 +43,11 @@ ensureDirectories();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Only connect to the database if not in test environment (Jest manages the connection)
+if (process.env.NODE_ENV !== 'test') {
+  connectDB();
+}
 
 // Swagger documentation
 app.use("/api-docs",
@@ -54,10 +67,12 @@ initRoutes(app)
 // Error handle middleware
 app.use(handleApiErrors);
 
-// Port and server start
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Load server only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
