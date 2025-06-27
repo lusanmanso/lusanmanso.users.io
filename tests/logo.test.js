@@ -4,10 +4,6 @@ const User = require('../models/User');
 const fs = require('fs');
 const path = require('path');
 
-jest.mock('../models/User');
-jest.mock('fs');
-jest.mock('path');
-
 describe('Logo API Endpoints', () => {
   afterEach(() => {
     jest.clearAllMocks();

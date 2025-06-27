@@ -6,12 +6,6 @@ const Client = require('../models/Client');
 const { validationResult } = require('express-validator');
 const { ApiError } = require('../middleware/handleError'); // Import ApiError for specific error assertions (though supertest usually catches it)
 
-// Mocking external dependencies
-jest.mock('../models/Client');
-jest.mock('express-validator', () => ({
-  validationResult: jest.fn(),
-}));
-
 // Helper function to mock validationResult consistently
 const mockValidationResult = (isEmpty, errors = []) => {
   validationResult.mockReturnValue({

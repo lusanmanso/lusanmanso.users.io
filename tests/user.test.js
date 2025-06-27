@@ -1,23 +1,51 @@
 const request = require('supertest');
-const app = require('../server'); // Import your Express app
+const app = require('../server'); // Import the Express app
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const authService = require('../services/authService');
-const handleEmail = require('../utils/handleEmail');
-// Remove express-validator mock as validation will be tested via HTTP requests
-// const { validationResult } = require('express-validator');
-const { ApiError } = require('../middleware/handleError');
+const handleEmail = require('../services/handleEmail');
 
-jest.mock('../models/User');
-jest.mock('../services/authService'); // Keep for functions like generateToken, hashPassword, etc.
-jest.mock('../utils/handleEmail'); // Keep for sendVerificationEmail
-// jest.mock('express-validator'); // Remove this mock
+// Import the config for the DB URL
+const config = require('../config/config');
+const { sendVerificationEmail, sendInvitationEmail } = require('../utils/handleEmail');
+
+// Just mocking the external services so the tests can focus on the API logic
+jest.mock('../utils/handleEmail', () => ({
+   sendVerificationEmail: jest.fn(() => Promise.resolve()),
+   sendResetPasswordEmail: jest.fn(() => Promise.resolve()),
+   sendInvitationEmail: jest.fn(() => Promise.resolve()),
+}))
+
+jest.mock('../services/authService', () => ({
+  generateToken: jest.fn(),
+  hashPassword: jest.fn(),
+  comparePassword: jest.fn(),
+  generateVerificationCode: jest.fn(),
+}));
 
 describe('User API Endpoints', () => {
-  afterEach(() => {
+  // Conectar a la base de datos de test
+  beforeAll(async () => {
+    const mongoURI_test = process.env.MONGODB_URI_TEST || 'mongodb://localhost:27017/test_db_albaranes';
+    await mongoose.connect(mongoURI_test, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+  });
+
+  // Clear user collection before each test
+  beforeEach(async () => {
+    await User.deleteMany({});
+    // Resetear mocks de jest.fn() para que cada test tenga mocks limpios
     jest.clearAllMocks();
   });
 
-  // Test for registerUser
+  // Close the database connection after all tests
+  afterAll(async () => {
+    await mongoose.connection.close();
+  });
+
+  // -- Test for registerUser --
   describe('POST /api/users/register', () => {
     it('should return 400 if validation errors exist (e.g., missing email)', async () => {
       // Arrange - express-validator will handle this, no need to mock validationResult

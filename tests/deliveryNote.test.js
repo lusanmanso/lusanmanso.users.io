@@ -4,18 +4,6 @@ const User = require('../models/User');
 const mongoose = require('mongoose');
 const { ApiError } = require('../middleware/handleError');
 
-jest.mock('../models/DeliveryNote');
-jest.mock('../models/User');
-
-// Mock mongoose session
-const sessionMock = {
-  startTransaction: jest.fn(),
-  commitTransaction: jest.fn(),
-  abortTransaction: jest.fn(),
-  endSession: jest.fn(),
-};
-mongoose.startSession = jest.fn().mockResolvedValue(sessionMock);
-
 describe('DeliveryNote Controller', () => {
   afterEach(() => {
     jest.clearAllMocks();

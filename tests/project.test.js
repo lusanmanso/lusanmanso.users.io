@@ -5,10 +5,6 @@ const Client = require('../models/Client');
 const { ApiError } = require('../middleware/handleError');
 const { validationResult } = require('express-validator');
 
-jest.mock('../models/Project');
-jest.mock('../models/Client');
-jest.mock('express-validator', () => ({ validationResult: jest.fn() }));
-
 describe('Project API Endpoints', () => {
   afterEach(() => {
     jest.clearAllMocks();
