@@ -1,6 +1,17 @@
 // File: routes/userRoutes.js
 const express = require('express');
-const { validateEmail, validatePassword, validateVerificationCode, validatePersonalData, validateCompanyData, validateInviteUser, validateForgotPassword, validateUpdateCompany, validateUpdateUser, validateUserLogin, validateEmailVerification, validateUserRegistration, validateResetPassword } = require('../validators/userValidators');
+const {
+  validateUserRegistration,
+  validateUserLogin,
+  validateEmailVerification,
+  validateUpdateUser,
+  validateUpdateCompany,
+  validateChangePassword,
+  validateForgotPassword,
+  validateResetPassword,
+  validateInviteUser,
+  validateUserId
+} = require('../validators/userValidators');
 const userController = require('../controllers/userController');
 const logoController = require('../controllers/logoController');
 const { auth } = require('../middleware/auth');
@@ -80,9 +91,10 @@ router.post(
  *       '500':
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.put(
+router.post(
    '/validation',
-   [auth, validateEmailVerification],
+   auth,
+   validateEmailVerification,
    asyncHandler(userController.verifyEmail)
 );
 
@@ -190,7 +202,8 @@ router.get(
  */
 router.put(
    '/',
-   [auth, ...validateUpdateUser],
+   auth,
+   validateUpdateUser,
    asyncHandler(userController.updatePersonalData)
 );
 
@@ -233,7 +246,8 @@ router.put(
  */
 router.patch(
    '/company',
-   [auth, ...validateUpdateCompany],
+   auth,
+   validateUpdateCompany,
    asyncHandler(userController.updateCompanyData)
 );
 
@@ -285,10 +299,11 @@ router.patch(
  */
 router.patch(
    '/logo',
-   [auth, upload.single('logo'), handleMulterErrors],
+   auth,
+   upload.single('logo'),
+   handleMulterErrors,
    asyncHandler(logoController.uploadLogo)
 );
-
 /**
  * @openapi
  * /user:
@@ -456,7 +471,8 @@ router.post(
  */
 router.post(
    '/invite',
-   [auth, validateInviteUser],
+   auth,
+   validateInviteUser,
    asyncHandler(userController.inviteTeamMember)
 );
 
