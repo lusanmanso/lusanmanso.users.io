@@ -1,4 +1,3 @@
-// File: middleware/auth.js
 const jwt = require('jsonwebtoken');
 const { ApiError } = require('./handleError');
 const config = require('../config/config');
@@ -19,12 +18,12 @@ exports.auth = async (req, res, next) => {
 
     // Check if no token
     if (!authHeader) {
-      throw new ApiError(401, 'Acceso denegado: token no proporcionado', 'auth');
+      return res.status(401).json({ message: 'No token, authorization denied' });
     }
 
     // Check if follows Bearer format
     if (!authHeader.startsWith('Bearer ')) {
-      throw new ApiError(401, 'Formato de token inválido, debe usar Bearer', 'auth');
+      return res.status(401).json({ message: 'Invalid token format, must use Bearer' });
     }
 
     // Extract the token (remove 'Bearer' prefix)
@@ -35,19 +34,19 @@ exports.auth = async (req, res, next) => {
       const decoded = jwt.verify(token, config.jwtSecret);
 
       // Verificar si el usuario existe y no está eliminado
-      const user = await User.findById(decoded.user.id);
+      const user = await User.findById(decoded.id);
       if (!user) {
-        throw new ApiError(401, 'Usuario no encontrado o eliminado', 'auth');
+        return res.status(404).json({ message: 'User not found' });
       }
 
       // Add user to request object
-      req.user = decoded.user;
+      req.user = decoded;
       next();
     } catch (jwtError) {
       if (jwtError.name === 'TokenExpiredError') {
-        throw new ApiError(401, 'El token ha expirado', 'auth');
+        return res.status(401).json({ message: 'Token has expired' });
       } else {
-        throw new ApiError(401, 'Token inválido', 'auth');
+        return res.status(401).json({ message: 'Invalid token' });
       }
     }
   } catch (error) {
@@ -64,11 +63,11 @@ exports.auth = async (req, res, next) => {
 exports.checkRole = (roles) => {
   return (req, res, next) => {
     if (!req.user) {
-      return next(new ApiError(401, 'Acceso denegado', 'auth'));
+      return next(new ApiError(401, 'Access denied', 'auth'));
     }
 
     if (!roles.includes(req.user.role)) {
-      return next(new ApiError(403, 'No tiene permisos para esta acción', 'auth'));
+      return next(new ApiError(403, 'No permissions for this action', 'auth'));
     }
 
     next();
