@@ -1,16 +1,12 @@
 // File: tests/user.test.js
 const request = require('supertest');
-const app = require('../server'); // Import the Express app
-const mongoose = require('mongoose');
-const User = require('../models/User');
+const app = require('../server'); // Importa la app de Express
+const mongoose = require('mongoose'); // Todavía necesitas mongoose para interactuar con la DB
+const User = require('../models/User'); // Importa el modelo User real
 const authService = require('../services/authService');
 const handleEmail = require('../utils/handleEmail');
 
-// Import config for the test DB URL
-const config = require('../config/config');
-
-// Mocks for external services so tests focus on API logic
-// DON'T MOCK MONGOOSE MODELS
+// Mocks para servicios externos para que los tests se centren en la lógica de la API
 jest.mock('../utils/handleEmail', () => ({
    sendVerificationEmail: jest.fn(() => Promise.resolve()),
    sendResetPasswordEmail: jest.fn(() => Promise.resolve()),
@@ -25,42 +21,29 @@ jest.mock('../services/authService', () => ({
 }));
 
 describe('User API Endpoints', () => {
-  // Connect to test database before all tests
-  beforeAll(async () => {
-    const mongoURI_test = process.env.MONGODB_URI_TEST || 'mongodb://localhost:27017/test_db_your_app';
-    await mongoose.connect(mongoURI_test, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-  });
+  // ELIMINADO: beforeAll para mongoose.connect
+  // ELIMINADO: afterAll para mongoose.connection.close()
 
-  // Clean user collection before each test to ensure independence
+  // Limpiar la colección de usuarios antes de cada test para asegurar independencia
   beforeEach(async () => {
     await User.deleteMany({});
-    // Reset jest.fn() mocks so each test has clean mocks
+    // Resetear mocks de jest.fn() para que cada test tenga mocks limpios
     jest.clearAllMocks();
-    // Common mocks for authService if needed globally
+    // Mocks comunes para authService si son necesarios globalmente
     authService.hashPassword.mockResolvedValue('hashedPasswordForTests');
     authService.generateVerificationCode.mockReturnValue('123456');
     authService.comparePassword.mockResolvedValue(true);
     authService.generateToken.mockImplementation((payload) => `mockTokenFor-${payload.id || payload._id}`);
   });
 
-  // Close database connection after all tests
-  afterAll(async () => {
-    await mongoose.connection.close();
-  });
-
-  // -- Test for registerUser --
+  // -- Test para registerUser --
   describe('POST /api/user/register', () => {
     it('should return 400 if validation errors exist (e.g., missing email or passwordConfirm)', async () => {
-      // Act
       const response = await request(app)
         .post('/api/user/register')
         .send({ name: 'Test', surname: 'User', email: 'invalid@example.com', password: 'Password123' });
 
-      // Assert
-      expect(response.status).toBe(400); // This should be 400 because of the validator
+      expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('success', false);
       expect(response.body).toHaveProperty('type', 'VALIDATION_ERROR');
       expect(response.body.data.errors).toEqual(
@@ -71,27 +54,21 @@ describe('User API Endpoints', () => {
     });
 
     it('should register a new user successfully and return 201', async () => {
-      // Arrange
       const userData = { name: 'Test', surname: 'User', email: 'test@example.com', password: 'Password123', passwordConfirm: 'Password123' };
-
-      // Act
       const res = await request(app)
         .post('/api/user/register')
         .send(userData);
 
-      // Assert
       expect(res.statusCode).toEqual(201);
       expect(res.body).toHaveProperty('message', 'User registered successfully. Verification email sent.');
       expect(res.body).toHaveProperty('user');
       expect(res.body.user).toHaveProperty('email', 'test@example.com');
-      expect(res.body.user).not.toHaveProperty('password'); // Password should not be returned
+      expect(res.body.user).not.toHaveProperty('password');
 
-      // Verify that mocked services were called
       expect(authService.hashPassword).toHaveBeenCalledWith('Password123');
       expect(authService.generateVerificationCode).toHaveBeenCalled();
       expect(handleEmail.sendVerificationEmail).toHaveBeenCalledWith('test@example.com', '123456');
 
-      // Verify that user was saved in real DB
       const userInDb = await User.findOne({ email: 'test@example.com' });
       expect(userInDb).not.toBeNull();
       expect(userInDb.isEmailVerified).toBe(false);
@@ -99,17 +76,15 @@ describe('User API Endpoints', () => {
     });
 
     it('should return 409 if email already exists and is verified', async () => {
-      // Arrange: Create a real user already verified in test DB
       await User.create({
         name: 'Existing',
         surname: 'User',
         email: 'existing@example.com',
-        password: 'HashedPasswordActual', // Real hashed password
+        password: 'HashedPasswordActual',
         isEmailVerified: true,
         verificationCode: '789012'
       });
 
-      // Act
       const res = await request(app)
         .post('/api/user/register')
         .send({
@@ -120,15 +95,12 @@ describe('User API Endpoints', () => {
           passwordConfirm: 'NewPassword123'
         });
 
-      // Assert
       expect(res.statusCode).toEqual(409);
       expect(res.body).toHaveProperty('message', 'Email is already registered and verified');
-      // Verify that email was NOT attempted to be sent
       expect(handleEmail.sendVerificationEmail).not.toHaveBeenCalled();
     });
 
     it('should overwrite user if email exists but is not verified, and return 201', async () => {
-      // Arrange: Create a real existing user but NOT verified
       const oldUser = await User.create({
         name: 'Old',
         surname: 'User',
@@ -140,7 +112,6 @@ describe('User API Endpoints', () => {
         maxVerificationAttempts: 3
       });
 
-      // Act
       const res = await request(app)
         .post('/api/user/register')
         .send({
@@ -151,35 +122,30 @@ describe('User API Endpoints', () => {
           passwordConfirm: 'NewPassword123'
         });
 
-      // Assert
       expect(res.statusCode).toEqual(201);
       expect(res.body).toHaveProperty('message', 'User registered successfully. Verification email sent.');
 
-      // Verify that old user was deleted and a new one created with same email
       const newCount = await User.countDocuments({ email: 'unverified@example.com' });
-      expect(newCount).toBe(1); // There should only be one user with that email
+      expect(newCount).toBe(1);
       const updatedUser = await User.findOne({ email: 'unverified@example.com' });
 
-      expect(updatedUser.name).toBe('New'); // Name should be from the new registration
-      expect(updatedUser.isEmailVerified).toBe(false); // Still unverified
-      expect(updatedUser.verificationCode).toBe('123456'); // New code (from default mock)
-      expect(updatedUser._id.toString()).not.toBe(oldUser._id.toString()); // Should be a new document ID
+      expect(updatedUser.name).toBe('New');
+      expect(updatedUser.isEmailVerified).toBe(false);
+      expect(updatedUser.verificationCode).toBe('123456');
+      expect(updatedUser._id.toString()).not.toBe(oldUser._id.toString());
       expect(handleEmail.sendVerificationEmail).toHaveBeenCalledWith('unverified@example.com', '123456');
     });
   });
 
-  // Test for verifyEmail
+  // Test para verifyEmail
   describe('POST /api/user/validation', () => {
     let token;
-    let mockUserInstance; // We'll use a real Mongoose instance
+    let mockUserInstance;
     const testEmail = 'verify@example.com';
     const testCode = '123456';
 
-    // Before each test in this suite, create an unverified user and a token for it
     beforeEach(async () => {
-      // Reset mocks before creating user, to avoid id conflicts
-      jest.clearAllMocks();
-      // Common mocks for authService if needed globally
+      jest.clearAllMocks(); // Clear mocks again for this suite's beforeEach
       authService.hashPassword.mockResolvedValue('hashedPasswordForTests');
       authService.generateVerificationCode.mockReturnValue('123456');
       authService.comparePassword.mockResolvedValue(true);
@@ -192,7 +158,7 @@ describe('User API Endpoints', () => {
         password: 'hashedPassword',
         isEmailVerified: false,
         verificationCode: testCode,
-        verificationExpires: new Date(Date.now() + 3600000), // Valid for 1 hour
+        verificationExpires: new Date(Date.now() + 3600000),
         verificationAttempts: 0,
         maxVerificationAttempts: 5,
       });
@@ -204,7 +170,7 @@ describe('User API Endpoints', () => {
       const response = await request(app)
         .post('/api/user/validation')
         .set('Authorization', `Bearer ${token}`)
-        .send({}); // Missing code
+        .send({});
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('success', false);
@@ -232,7 +198,6 @@ describe('User API Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ code: testCode });
 
-      // Verify that we attempted to search for user with token ID
       expect(User.findById).toHaveBeenCalledWith(mockUserInstance._id.toString());
       expect(response.status).toBe(404);
       expect(response.body).toHaveProperty('message', 'User not found');
@@ -244,11 +209,10 @@ describe('User API Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ code: testCode });
 
-      // Get user from DB to verify their real state
       const updatedUser = await User.findById(mockUserInstance._id);
       expect(updatedUser.isEmailVerified).toBe(true);
-      expect(updatedUser.verificationCode).toBeNull(); // Code should be null after verification
-      expect(updatedUser.verificationAttempts).toBe(0); // Attempts reset
+      expect(updatedUser.verificationCode).toBeNull();
+      expect(updatedUser.verificationAttempts).toBe(0);
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'Email verified successfully');
@@ -262,16 +226,15 @@ describe('User API Endpoints', () => {
         .set('Authorization', `Bearer ${token}`)
         .send({ code: 'wrongCode' });
 
-      const updatedUser = await User.findById(mockUserInstance._id); // User is updated to see attempts
-      expect(updatedUser.verificationAttempts).toBe(1); // Attempt should increment
-      expect(updatedUser.isEmailVerified).toBe(false); // Not verified
+      const updatedUser = await User.findById(mockUserInstance._id);
+      expect(updatedUser.verificationAttempts).toBe(1);
+      expect(updatedUser.isEmailVerified).toBe(false);
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('message', 'Invalid or expired verification code.');
     });
 
     it('should return 400 if max verification attempts exceeded', async () => {
-      // Configure user to have already reached max attempts
       await User.findByIdAndUpdate(mockUserInstance._id, { verificationAttempts: mockUserInstance.maxVerificationAttempts });
 
       const response = await request(app)
@@ -280,15 +243,14 @@ describe('User API Endpoints', () => {
         .send({ code: testCode });
 
       const updatedUser = await User.findById(mockUserInstance._id);
-      expect(updatedUser.verificationAttempts).toBe(mockUserInstance.maxVerificationAttempts); // Attempts don't change if already exceeded
-      expect(updatedUser.isEmailVerified).toBe(false); // Not verified
+      expect(updatedUser.verificationAttempts).toBe(mockUserInstance.maxVerificationAttempts);
+      expect(updatedUser.isEmailVerified).toBe(false);
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('message', 'Maximum verification attempts reached. Please request a new code.');
     });
 
      it('should return 400 if user email is already verified', async () => {
-      // Configure user to already be verified
       await User.findByIdAndUpdate(mockUserInstance._id, { isEmailVerified: true });
 
       const response = await request(app)
@@ -301,15 +263,14 @@ describe('User API Endpoints', () => {
     });
   });
 
-  // Test for loginUser
+  // Test para loginUser
   describe('POST /api/user/login', () => {
     let hashedPassword;
     let verifiedUser;
 
     beforeEach(async () => {
-        await User.deleteMany({}); // Clean before each login test
+        await User.deleteMany({});
 
-        // Create a verified user for successful login tests
         authService.hashPassword.mockResolvedValue('hashedPassword123');
         hashedPassword = await authService.hashPassword('correctPassword');
         verifiedUser = await User.create({
@@ -320,14 +281,14 @@ describe('User API Endpoints', () => {
             isEmailVerified: true,
             role: 'user',
         });
-        authService.comparePassword.mockResolvedValue(true); // Default mock for password comparison
-        authService.generateToken.mockImplementation((payload) => `mockTokenFor-${payload.id || payload._id}`); // Ensure consistency with ObjectId
+        authService.comparePassword.mockResolvedValue(true);
+        authService.generateToken.mockImplementation((payload) => `mockTokenFor-${payload.id || payload._id}`);
     });
 
     it('should return 400 for validation errors (e.g., missing email or password)', async () => {
       const response = await request(app)
         .post('/api/user/login')
-        .send({ email: 'test@example.com' }); // Missing password
+        .send({ email: 'test@example.com' });
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('success', false);
       expect(response.body.data.errors).toEqual(
@@ -338,39 +299,33 @@ describe('User API Endpoints', () => {
     });
 
     it('should return 401 if user not found', async () => {
-      // if there are no subsequent findOne calls in this test.
-      // If your controller does User.findOne, and finds nothing, it returns 401.
       const response = await request(app)
         .post('/api/user/login')
         .send({ email: 'nonexistent@example.com', password: 'password123' });
-      // You don't need expect(User.findOne).toHaveBeenCalledWith... if we're not mocking User directly
       expect(response.status).toBe(401);
       expect(response.body).toHaveProperty('message', 'Invalid credentials');
     });
 
     it('should return 400 if email not verified', async () => {
-      // Create an unverified user for this test
       const unverifiedUser = await User.create({
           name: 'Unverified User',
           surname: 'Test',
           email: 'unverified@example.com',
-          password: hashedPassword, // Use hashed password from beforeEach
+          password: hashedPassword,
           isEmailVerified: false,
           role: 'user',
       });
-      // We don't need to mock User.findOne if we're creating the user directly in the DB.
-      // The controller will search for it and find it.
 
       const response = await request(app)
         .post('/api/user/login')
-        .send({ email: 'unverified@example.com', password: 'correctPassword' }); // Use correct password
+        .send({ email: 'unverified@example.com', password: 'correctPassword' });
 
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('message', 'Email not verified. Please verify your email before logging in.');
     });
 
     it('should return 401 if password does not match', async () => {
-      authService.comparePassword.mockResolvedValueOnce(false); // Only for this test
+      authService.comparePassword.mockResolvedValueOnce(false);
 
       const response = await request(app)
         .post('/api/user/login')
@@ -387,8 +342,6 @@ describe('User API Endpoints', () => {
         .send({ email: 'login@example.com', password: 'correctPassword' });
 
       expect(authService.comparePassword).toHaveBeenCalledWith('correctPassword', hashedPassword);
-
-      // Verify that the id sent to generateToken is the real id of the created user
       expect(authService.generateToken).toHaveBeenCalledWith(expect.objectContaining({ id: verifiedUser._id.toString() }));
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('token', `mockTokenFor-${verifiedUser._id.toString()}`);
@@ -402,10 +355,10 @@ describe('User API Endpoints', () => {
     });
   });
 
-  // Test for getCurrentUser (GET /api/user)
+  // Test para getCurrentUser (GET /api/user)
   describe('GET /api/user', () => {
     let token;
-    let testUser; // Real user instance
+    let testUser;
 
     beforeEach(async () => {
         await User.deleteMany({});
@@ -413,7 +366,7 @@ describe('User API Endpoints', () => {
             name: 'Current User',
             surname: 'Test',
             email: 'current@example.com',
-            password: 'hashedPasswordForTests', // Password hashed by mock in global beforeEach
+            password: 'hashedPasswordForTests',
             isEmailVerified: true,
             role: 'user',
         });
@@ -430,7 +383,7 @@ describe('User API Endpoints', () => {
       User.findById.mockResolvedValueOnce(null);
 
       const response = await request(app)
-        .get('/api/user') // CORRECTION: Path to /api/user
+        .get('/api/user')
         .set('Authorization', `Bearer ${token}`);
 
       expect(User.findById).toHaveBeenCalledWith(testUser._id.toString());
@@ -439,7 +392,6 @@ describe('User API Endpoints', () => {
     });
 
     it('should return current user data (200)', async () => {
-      // In this test, user is already created in beforeEach, so User.findById will find it.
       const response = await request(app)
         .get('/api/user')
         .set('Authorization', `Bearer ${token}`);
@@ -452,11 +404,11 @@ describe('User API Endpoints', () => {
         isEmailVerified: testUser.isEmailVerified,
         role: testUser.role
       }));
-      expect(response.body).not.toHaveProperty('password'); // Make sure password is not exposed
+      expect(response.body).not.toHaveProperty('password');
     });
   });
 
-  // Test for updatePersonalData (PUT /api/user)
+  // Test para updatePersonalData (PUT /api/user)
   describe('PUT /api/user', () => {
     let token;
     let testUser;
@@ -467,7 +419,7 @@ describe('User API Endpoints', () => {
             name: 'Old Name',
             surname: 'Old Surname',
             email: 'update@example.com',
-            password: 'hashedPasswordForTests', // Password hashed by mock
+            password: 'hashedPasswordForTests',
             isEmailVerified: true,
             role: 'user',
             phone: '123456789'
@@ -487,12 +439,12 @@ describe('User API Endpoints', () => {
       const response = await request(app)
         .put('/api/user')
         .set('Authorization', `Bearer ${token}`)
-        .send({ name: '' }); // Empty name
+        .send({ name: '' });
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('success', false);
       expect(response.body.data.errors).toEqual(
         expect.arrayContaining([
-          expect.objectContaining({ msg: 'name cannot be empty.' }) // Error message from your validator
+          expect.objectContaining({ msg: 'name cannot be empty.' })
         ])
       );
     });
@@ -520,7 +472,6 @@ describe('User API Endpoints', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('message', 'Personal data updated successfully');
 
-      // Verify directly from database
       const updatedUserInDb = await User.findById(testUser._id);
       expect(updatedUserInDb.name).toBe(updateData.name);
       expect(updatedUserInDb.phone).toBe(updateData.phone);
@@ -529,7 +480,7 @@ describe('User API Endpoints', () => {
       expect(response.body.user).toEqual(expect.objectContaining({
         _id: testUser._id.toString(),
         name: updateData.name,
-        email: testUser.email, // Email doesn't change in this endpoint
+        email: testUser.email,
         phone: updateData.phone,
         surname: updateData.surname
       }));
