@@ -1,4 +1,3 @@
-// File: controllers/userController.js
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const authService = require('../services/authService');
@@ -14,10 +13,14 @@ exports.registerUser = async (req, res) => {
         // Check validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
         }
 
-        const { email, password } = req.body;
+        const { name, surname, email, password, passwordConfirm } = req.body;
 
         // Check if the user already exists and is verified
         const existingUser = await User.findOne({ email });
@@ -28,26 +31,28 @@ exports.registerUser = async (req, res) => {
         }
 
         // If the user exists but is not verified, delete it to create a new one
-        if (existingUser) {
+        if (existingUser && !existingUser.isEmailVerified) {
             await User.deleteOne({ _id: existingUser._id });
         }
 
         // Generate 6-digit verification code
         const verificationCode = authService.generateVerificationCode();
-        const maxAttempts = 3; // Maximum number of attempts to validate the code
+        const maxAttempts = 3;
 
         // Encrypt the password
         const hashedPassword = await authService.hashPassword(password);
 
         // Create new user
         const newUser = new User({
+            name,
+            surname,
             email,
             password: hashedPassword,
             verificationCode,
             verificationAttempts: 0,
             maxVerificationAttempts: maxAttempts,
             isEmailVerified: false,
-            role: 'user', // Default role
+            role: 'user',
         });
 
         // Save user to database
@@ -55,11 +60,9 @@ exports.registerUser = async (req, res) => {
 
         // Generate JWT
         const payload = {
-            user: {
-                id: newUser.id,
-                email: newUser.email,
-                role: newUser.role
-            }
+            id: newUser.id,
+            email: newUser.email,
+            role: newUser.role
         };
 
         const token = authService.generateToken(payload);
@@ -72,83 +75,79 @@ exports.registerUser = async (req, res) => {
             console.error('Error sending verification mail: ', emailError);
         }
 
-        // console.log(`Verification code for ${email}: ${verificationCode}`);
-
         // Successful response
         res.status(201).json({
+            message: 'User registered successfully. Verification email sent.',
             user: {
                 email: newUser.email,
-                status: newUser.isEmailVerified ? 'verified' : 'pending',
-                role: newUser.role,
-                id: newUser.id
+                status: newUser.isEmailVerified ? 'verified' : 'pending'
             },
             token
         });
-
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
     }
 };
 
-/** Verify user email with verification code
-    * @param {Object} req - Express request object
-    * @param {Object} res - Express response object
-    */
+/**
+ * Verify user email
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 exports.verifyEmail = async (req, res) => {
     try {
+        // Check validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
         }
 
         const { code } = req.body;
         const userId = req.user.id;
 
-        // Find user by ID
+        // Find user by ID from token
         const user = await User.findById(userId);
-
-        // If user does not exist
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // If user is already verified
+        // Check if email is already verified
         if (user.isEmailVerified) {
-            return res.status(400).json({ message: 'Email already verified' });
-        }
-
-        // Check if maximum attempts exceeded
-        if (user.verificationAttempts >= user.maxVerificationAttempts) {
             return res.status(400).json({
-                message: 'Maximum verification attempts exceeded. Please request a new code.'
+                message: 'Email is already verified.'
             });
         }
 
-        user.verificationAttempts += 1;
+        // Check if max attempts exceeded
+        if (user.verificationAttempts >= user.maxVerificationAttempts) {
+            return res.status(400).json({
+                message: 'Maximum verification attempts reached. Please request a new code.'
+            });
+        }
 
+        // Check verification code
         if (user.verificationCode !== code) {
+            user.verificationAttempts += 1;
             await user.save();
             return res.status(400).json({
-                message: 'Invalid verification code',
-                attemptsLeft: user.maxVerificationAttempts - user.verificationAttempts
+                message: 'Incorrect verification code'
             });
         }
 
         // Update user as verified
         user.isEmailVerified = true;
-        user.verificationCode = "VERIFIED";
+        user.verificationCode = null;
+        user.verificationAttempts = 0;
         await user.save();
 
         // Return success response
         return res.status(200).json({
-            message: 'Email verified successfully',
-            user: {
-                email: user.email,
-                status: 'verified',
-                role: user.role,
-                id: user.id
-            }
+            message: 'Email verified successfully'
         });
     } catch (err) {
         console.error(err.message);
@@ -166,7 +165,11 @@ exports.loginUser = async (req, res) => {
         // Check validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
         }
 
         const { email, password } = req.body;
@@ -182,8 +185,7 @@ exports.loginUser = async (req, res) => {
         // Check if email is verified
         if (!user.isEmailVerified) {
             return res.status(400).json({
-                message: 'Email not verified. Please verify your email before logging in.',
-                needsVerification: true
+                message: 'Email not verified. Please verify your email to log in.'
             });
         }
 
@@ -195,28 +197,26 @@ exports.loginUser = async (req, res) => {
 
         // Generate JWT
         const payload = {
-            user: {
-                id: user.id,
-                email: user.email,
-                role: user.role
-            }
+            id: user.id,
+            email: user.email,
+            role: user.role
         };
 
         const token = authService.generateToken(payload);
 
-        // Return success responde
+        // Return success response
         res.status(200).json({
+            token,
             user: {
+                id: user.id,
                 email: user.email,
-                status: user.isEmailVerified ? 'verified' : 'pending',
                 role: user.role,
-                id: user.id
-            },
-            token
+                status: user.isEmailVerified ? 'verified' : 'pending'
+            }
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({message: 'Server error' });
+        res.status(500).json({ message: 'Server error' });
     }
 };
 
@@ -227,22 +227,15 @@ exports.loginUser = async (req, res) => {
  */
 exports.getCurrentUser = async (req, res) => {
     try {
-        // Get user from database (exclude password)
-        const user = await User.findById(req.user.id).select('-password');
+        const userId = req.user.id;
 
+        // Find user by ID from token
+        const user = await User.findById(userId).select('-password -verificationCode');
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        res.status(200).json({
-            user: {
-                email: user.email,
-                status: user.isEmailVerified ? 'verified' : 'pending',
-                role: user.role,
-                id: user.id,
-                // Include other user fields as needed
-            }
-        });
+        res.status(200).json(user);
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
@@ -250,7 +243,7 @@ exports.getCurrentUser = async (req, res) => {
 };
 
 /**
- * Update user personal data
+ * Update personal data
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
@@ -259,34 +252,30 @@ exports.updatePersonalData = async (req, res) => {
         // Check validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
         }
 
         const userId = req.user.id;
-        const { firstName, lastName, nif } = req.body;
+        const updateData = req.body;
 
-        // Find user by ID
-        const user = await User.findById(userId);
+        // Find and update user
+        const user = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            { new: true, runValidators: true }
+        ).select('-password -verificationCode');
+
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-
-        // Update personal data
-        user.firstName = firstName;
-        user.lastName = lastName;
-        user.nif = nif;
-
-        await user.save();
-
         res.status(200).json({
-            user: {
-                id: user.id,
-                email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
-                nif: user.nif
-            }
+            message: 'Personal data updated successfully',
+            user
         });
     } catch (err) {
         console.error(err.message);
@@ -304,7 +293,11 @@ exports.updateCompanyData = async (req, res) => {
         // Check validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
         }
 
         const userId = req.user.id;
@@ -361,16 +354,16 @@ exports.updateCompanyData = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     try {
         const userId = req.user.id;
-        const softDelete = req.query.soft != 'false'; // Default is soft delete
+        const softDelete = req.query.soft !== 'false'; // Default is soft delete
 
         const user = await User.findById(userId);
         if (!user) {
             return res.status(404).json({message: 'User not found'});
         }
 
-        if (softDelete) { // Using mongoose-delete
+        if (softDelete) { // Using mongoose soft-delete
             await user.delete();
-            return res.status(200).json({ message: 'User deleted temporarilly' });
+            return res.status(200).json({ message: 'User deleted temporarily' });
         } else { // Hard delete
             await User.findByIdAndDelete(userId);
             return res.status(200).json({ message: 'User deleted permanently' });
@@ -388,6 +381,16 @@ exports.deleteUser = async (req, res) => {
  */
 exports.requestPasswordReset = async (req, res) => {
     try {
+        // Check validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
+        }
+
         const { email } = req.body;
 
         const user = await User.findOne({ email });
@@ -410,7 +413,7 @@ exports.requestPasswordReset = async (req, res) => {
             console.error(`Error sending password reset email: `, emailError);
         }
 
-        res.status(200).json({ message: 'If the email exists you will recieve a reset code' });
+        res.status(200).json({ message: 'If the email exists you will receive a reset code' });
     } catch (err) {
         console.error(err.message);
         res.status(500).json({ message: 'Server error' });
@@ -424,6 +427,16 @@ exports.requestPasswordReset = async (req, res) => {
  */
 exports.resetPassword = async (req, res) => {
     try {
+        // Check validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
+        }
+
         const { email, code, newPassword } = req.body;
 
         // Verify user exists and code is valid
@@ -435,11 +448,6 @@ exports.resetPassword = async (req, res) => {
 
         if (!user) {
             return res.status(400).json({ message: 'Invalid or expired code' });
-        }
-
-        // Validate new password
-        if (newPassword.length < 8) {
-            return res.status(400).json({ message: 'Password must containt at least 8 characters' });
         }
 
         // Update password
@@ -463,6 +471,16 @@ exports.resetPassword = async (req, res) => {
  */
 exports.inviteTeamMember = async (req, res) => {
     try {
+        // Check validation errors
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                type: 'VALIDATION_ERROR',
+                data: { errors: errors.array() }
+            });
+        }
+
         const { email, role } = req.body;
         const ownerId = req.user.id;
 
@@ -479,7 +497,6 @@ exports.inviteTeamMember = async (req, res) => {
         let invitedUser = await User.findOne({ email });
 
         if (invitedUser) {
-
             invitedUser.role = 'guest';
             invitedUser.companyId = owner.company._id;
             await invitedUser.save();
@@ -508,7 +525,7 @@ exports.inviteTeamMember = async (req, res) => {
         const tempPassword = Math.random().toString(36).slice(-8);
         const hashedPassword = await authService.hashPassword(tempPassword);
 
-        // Create new user with guest role   
+        // Create new user with guest role
         const verificationCode = authService.generateVerificationCode();
         const newUser = new User({
             email,
