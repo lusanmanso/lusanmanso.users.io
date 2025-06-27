@@ -1,51 +1,76 @@
-// File: validators/userValidators.js
-const { body } = require('express-validator');
-const {
-  validateMongoId,
-  handleValidationErrors,
-  validateRequiredString,
-  validateOptionalString,
-} = require('./commonValidators');
-const User = require('../models/User'); // Needed for email existence check
+const { body, param, validationResult } = require('express-validator');
+const mongoose = require('mongoose');
+
+/**
+ * Handle validation errors and format response
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next function
+ */
+const handleValidationErrors = (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      type: 'VALIDATION_ERROR',
+      data: { errors: errors.array() }
+    });
+  }
+  next();
+};
+
+/**
+ * Validate MongoDB ObjectId in route parameters
+ * @param {string} paramName - The parameter name to validate
+ * @returns {ValidationChain}
+ */
+const validateMongoId = (paramName) => {
+  return param(paramName)
+    .custom((value) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        throw new Error(`${paramName} must be a valid MongoDB ObjectId.`);
+      }
+      return true;
+    });
+};
 
 /**
  * Validation rules for user registration.
  * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
 const validateUserRegistration = [
-  validateRequiredString('name', 2),
-  validateRequiredString('surname', 2),
+  body('name')
+    .notEmpty()
+    .withMessage('Name cannot be empty.')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Name must be between 2 and 50 characters.'),
+  body('surname')
+    .notEmpty()
+    .withMessage('Surname cannot be empty.')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Surname must be between 2 and 50 characters.'),
   body('email')
     .notEmpty()
     .withMessage('Email cannot be empty.')
     .isEmail()
     .withMessage('Must be a valid email address.')
-    .normalizeEmail()
-    .custom(async (email) => {
-      // Check if email already exists
-      const user = await User.findOne({ email });
-      if (user) {
-        return Promise.reject('Email already in use.');
-      }
-    }),
+    .normalizeEmail(),
   body('password')
     .notEmpty()
     .withMessage('Password cannot be empty.')
     .isLength({ min: 8 })
     .withMessage('Password must be at least 8 characters long.')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d\S]{8,}$/)
-    .withMessage(
-      'Password must contain at least one uppercase letter, one lowercase letter, and one number.'
-    ),
-   body('passwordConfirm')
-      .notEmpty()
-      .withMessage('Password confirmation is required.')
-      .custom((value, { req }) => {
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number.'),
+  body('passwordConfirm')
+    .notEmpty()
+    .withMessage('Password confirmation is required.')
+    .custom((value, { req }) => {
       if (value !== req.body.password) {
-         throw new Error('Passwords do not match.');
+        throw new Error('Password confirmation does not match password.');
       }
       return true;
-   }),
+    }),
   handleValidationErrors,
 ];
 
@@ -60,49 +85,82 @@ const validateUserLogin = [
     .isEmail()
     .withMessage('Must be a valid email address.')
     .normalizeEmail(),
-  body('password').notEmpty().withMessage('Password cannot be empty.'),
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required.'),
   handleValidationErrors,
 ];
 
 /**
- * Validation rules for validating user email with a code.
+ * Validation rules for email verification.
  * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
 const validateEmailVerification = [
-  body('validationCode')
+  body('code')
     .notEmpty()
-    .withMessage('Validation code cannot be empty.')
-    .isString()
-    .withMessage('Validation code must be a string.')
-    .isLength({ min: 6, max: 6 }) // Assuming a 6-digit code
-    .withMessage('Validation code must be 6 characters long.'),
+    .withMessage('Verification code is required.')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Verification code must be exactly 6 characters.')
+    .isNumeric()
+    .withMessage('Verification code must be numeric.'),
   handleValidationErrors,
 ];
 
 /**
  * Validation rules for updating user personal data.
- * Allows partial updates (PATCH).
  * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
 const validateUpdateUser = [
-  validateOptionalString('name', 2),
-  validateOptionalString('surname', 2),
-  // Email update is usually handled separately or requires re-validation
-  // Add other updatable personal fields here if needed
+  body('firstName')
+    .optional()
+    .notEmpty()
+    .withMessage('First name cannot be empty.')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('First name must be between 2 and 50 characters.'),
+  body('lastName')
+    .optional()
+    .notEmpty()
+    .withMessage('Last name cannot be empty.')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters.'),
+  body('phoneNumber')
+    .optional()
+    .isMobilePhone()
+    .withMessage('Must be a valid phone number.'),
+  body('nif')
+    .optional()
+    .isLength({ min: 9, max: 9 })
+    .withMessage('NIF must be exactly 9 characters.'),
   handleValidationErrors,
 ];
 
 /**
  * Validation rules for updating user company data.
- * Allows partial updates (PATCH).
  * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
 const validateUpdateCompany = [
-  validateOptionalString('companyName', 2),
-  validateOptionalString('companyAddress'),
-  validateOptionalString('companyPhone'),
-  validateOptionalString('companyNIF'),
-  // Add other updatable company fields here if needed
+  body('company.name')
+    .optional()
+    .notEmpty()
+    .withMessage('Company name cannot be empty.')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Company name must be between 2 and 100 characters.'),
+  body('company.cif')
+    .optional()
+    .isLength({ min: 9, max: 9 })
+    .withMessage('CIF must be exactly 9 characters.'),
+  body('company.address')
+    .optional()
+    .notEmpty()
+    .withMessage('Company address cannot be empty.'),
+  body('company.phone')
+    .optional()
+    .isMobilePhone()
+    .withMessage('Must be a valid phone number.'),
+  body('company.isAutonomous')
+    .optional()
+    .isBoolean()
+    .withMessage('isAutonomous must be a boolean value.'),
   handleValidationErrors,
 ];
 
@@ -147,11 +205,23 @@ const validateForgotPassword = [
 ];
 
 /**
- * Validation rules for resetting password with a token.
+ * Validation rules for resetting password with a code.
  * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
 const validateResetPassword = [
-  body('token').notEmpty().withMessage('Reset token cannot be empty.'),
+  body('email')
+    .notEmpty()
+    .withMessage('Email cannot be empty.')
+    .isEmail()
+    .withMessage('Must be a valid email address.')
+    .normalizeEmail(),
+  body('code')
+    .notEmpty()
+    .withMessage('Reset code cannot be empty.')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('Reset code must be exactly 6 characters.')
+    .isNumeric()
+    .withMessage('Reset code must be numeric.'),
   body('newPassword')
     .notEmpty()
     .withMessage('New password cannot be empty.')
@@ -177,7 +247,7 @@ const validateInviteUser = [
     .normalizeEmail(),
   body('role')
     .optional()
-    .isIn(['admin', 'guest']) // Adjust roles as needed
+    .isIn(['admin', 'guest'])
     .withMessage('Invalid role specified.'),
   handleValidationErrors,
 ];
@@ -198,5 +268,5 @@ module.exports = {
   validateForgotPassword,
   validateResetPassword,
   validateInviteUser,
-  validateUserId, // Export validator for routes like GET /api/user/:id
+  validateUserId,
 };
