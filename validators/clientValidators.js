@@ -26,7 +26,7 @@ const validateCreateClient = [
         // This should ideally not happen if auth middleware runs first
         throw new Error('User information not found.');
       }
-      const existingClient = await Client.findOne({ email, userId });
+      const existingClient = await Client.findOne({ email, createdBy: userId });
       if (existingClient) {
         return Promise.reject('Client with this email already exists for this user.');
       }
