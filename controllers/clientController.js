@@ -46,7 +46,7 @@ exports.createClient = async (req, res, next) => {
 exports.getClients = async (req, res, next) => {
    const userId = req.user.id; // From middleware auth
 
-   const clients = await Client.find({ createdBy: userId, archived: false }).populate('compnay', 'name');
+   const clients = await Client.find({ createdBy: userId, archived: false }).populate('company', 'name');
 
    res.status(200).json({
       message: 'Clients retrieved successfully',
