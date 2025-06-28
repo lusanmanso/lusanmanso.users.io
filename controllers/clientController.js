@@ -33,7 +33,7 @@ exports.createClient = async (req, res, next) => {
    await client.save();
 
    res.status(201).json({
-      message: 'CLient created successfully',
+      message: 'Client created successfully',
       client,
    });
 };
