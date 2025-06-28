@@ -110,7 +110,9 @@ exports.updateClient = async (req, res) => {
 
    // Update other fields
    if (updateData.name) client.name = updateData.name;
-   if (updateData.hasOwnProperty('company')) client.company = updateData.company || null; // TODO: Deja actualizar a null
+   if (updateData.hasOwnProperty('company')) client.company = updateData.company || null;
+
+   const updatedClient = await client.save();
 
    res.status(200).json({
       message: 'Client updated successfully',
