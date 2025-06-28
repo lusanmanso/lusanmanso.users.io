@@ -18,7 +18,7 @@ exports.createClient = async (req, res, next) => {
    const { name, email, company } = req.body;
    const userId = req.user.id; // From middleware auth
 
-   const existingClient = await Client.findOne({ email, user: userId });
+   const existingClient = await Client.findOne({ email, createdBy: userId });
    if (existingClient) {
       throw new ApiError(400, 'Client already exists', 'client', { errors: [{ msg: 'Client already exists' }] });
    }
@@ -27,7 +27,7 @@ exports.createClient = async (req, res, next) => {
       name,
       email,
       company: company || null,
-      user: userId,
+      createdBy: userId,
    });
 
    await client.save();
