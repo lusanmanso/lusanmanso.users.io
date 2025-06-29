@@ -1,3 +1,4 @@
+// FIle: controllers/userController.js
 const { validationResult } = require('express-validator');
 const User = require('../models/User');
 const authService = require('../services/authService');

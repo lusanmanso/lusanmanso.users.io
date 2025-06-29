@@ -1,3 +1,4 @@
+// File: middleware/auth.js
 const jwt = require('jsonwebtoken');
 const { ApiError } = require('./handleError');
 const config = require('../config/config');

@@ -1,3 +1,4 @@
+// File: controllers/logoController.js
 const { config } = require('dotenv');
 const User = require('../models/User');
 const fs = require('fs');

@@ -1,3 +1,4 @@
+// File: docs/swagger.js
 const swaggerJsdoc = require("swagger-jsdoc")
 const path = require("path")
 
