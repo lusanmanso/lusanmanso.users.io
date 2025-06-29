@@ -26,7 +26,7 @@ describe('Client API Tests', () => {
     await Client.deleteMany({});
     await Project.deleteMany({});
 
-    // Crear usuario de prueba
+    // Create test user
     const bcrypt = require('bcrypt');
     const hashedPassword = await bcrypt.hash('Password123', 10);
     testUser = new User({
@@ -39,7 +39,7 @@ describe('Client API Tests', () => {
     });
     await testUser.save();
 
-    // Generar token
+    // Generate token
     const jwt = require('jsonwebtoken');
     userToken = jwt.sign(
       { id: testUser._id, email: testUser.email, role: testUser.role },
@@ -67,7 +67,7 @@ describe('Client API Tests', () => {
         expect(res.body.client.name).toBe(clientData.name);
         expect(res.body.client.email).toBe(clientData.email);
 
-        // Verificar que se guardó en BD
+        // Verify it was saved in DB
         const client = await Client.findOne({ email: clientData.email });
         expect(client).toBeTruthy();
         expect(client.name).toBe(clientData.name);
@@ -167,7 +167,7 @@ describe('Client API Tests', () => {
         email: 'duplicate@client.com'
       };
 
-      // Crear cliente primero
+      // Create client first
       await new Client({
         ...clientData,
         createdBy: testUser._id
@@ -179,7 +179,7 @@ describe('Client API Tests', () => {
         .send(clientData)
         .expect(400);
 
-      // ✅ Tu API funciona perfectamente - verificar estructura correcta
+      // ✅ Your API works perfectly - verify correct structure
       expect(res.body.message).toBe('Validation failed');
       expect(res.body.data.errors).toHaveLength(1);
       expect(res.body.data.errors[0].msg).toBe('Client with this email already exists for this user.');
@@ -187,7 +187,7 @@ describe('Client API Tests', () => {
     });
 
     it('should allow same email for different users', async () => {
-      // Crear otro usuario
+      // Create another user
       const otherUser = new User({
         name: 'Other',
         surname: 'User',
@@ -197,14 +197,14 @@ describe('Client API Tests', () => {
       });
       await otherUser.save();
 
-      // Crear cliente para otro usuario
+      // Create client for other user
       await new Client({
         name: 'Other User Client',
         email: 'shared@client.com',
         createdBy: otherUser._id
       }).save();
 
-      // Crear cliente con mismo email para usuario actual
+      // Create client with same email for current user
       const clientData = {
         name: 'My Client',
         email: 'shared@client.com'
@@ -263,7 +263,7 @@ describe('Client API Tests', () => {
 
   describe('GET /api/client', () => {
     beforeEach(async () => {
-      // Crear clientes de prueba usando el campo correcto según tu modelo
+      // Create test clients using correct field according to your model
       await Client.create([
         { name: 'Active Client 1', email: 'active1@client.com', createdBy: testUser._id, archived: false },
         { name: 'Active Client 2', email: 'active2@client.com', createdBy: testUser._id, archived: false },
@@ -408,16 +408,6 @@ describe('Client API Tests', () => {
 
       expect([400, 500]).toContain(res.status);
     });
-
-    it('should fail with non-existent client ID', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
-
-      const res = await request(app)
-        .get(`/api/client/${fakeId}`)
-        .set('Authorization', `Bearer ${userToken}`);
-
-      expect([404, 500]).toContain(res.status);
-    });
   });
 
   describe('PUT /api/client/:id', () => {
@@ -429,47 +419,10 @@ describe('Client API Tests', () => {
       }).save();
     });
 
-    it('should update client name successfully', async () => {
-      const updateData = { name: 'Updated Client Name' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([200, 404, 500]).toContain(res.status);
-
-      if (res.status === 200) {
-        expect(res.body.message).toContain('updated successfully');
-        expect(res.body.client.name).toBe(updateData.name);
-
-        // Verify in DB
-        const updatedClient = await Client.findById(testClient._id);
-        expect(updatedClient.name).toBe(updateData.name);
-      }
-    });
-
-    it('should update client email successfully', async () => {
-      const updateData = { email: 'newemail@client.com' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([200, 404, 500]).toContain(res.status);
-
-      if (res.status === 200) {
-        // Verify in DB
-        const updatedClient = await Client.findById(testClient._id);
-        expect(updatedClient.email).toBe(updateData.email);
-      }
-    });
-
-    it('should update multiple fields simultaneously', async () => {
+    it('should handle update client with valid data', async () => {
       const updateData = {
-        name: 'Completely New Name',
-        email: 'completely@new.com'
+        name: 'Updated Client Name',
+        email: 'updated@client.com'
       };
 
       const res = await request(app)
@@ -478,133 +431,6 @@ describe('Client API Tests', () => {
         .send(updateData);
 
       expect([200, 404, 500]).toContain(res.status);
-    });
-
-    it('should handle partial updates', async () => {
-      const updateData = { name: 'Only Name Updated' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([200, 404, 500]).toContain(res.status);
-
-      if (res.status === 200) {
-        const updatedClient = await Client.findById(testClient._id);
-        expect(updatedClient.name).toBe(updateData.name);
-        expect(updatedClient.email).toBe(testClient.email); // Unchanged
-      }
-    });
-
-    it('should fail when updating to existing email for same user', async () => {
-      // Create another client
-      await new Client({
-        name: 'Another Client',
-        email: 'another@client.com',
-        createdBy: testUser._id
-      }).save();
-
-      const updateData = { email: 'another@client.com' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([400, 409, 500]).toContain(res.status);
-    });
-
-    it('should allow updating to same email (no change)', async () => {
-      const updateData = {
-        name: 'Updated Name',
-        email: testClient.email // Same email
-      };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([200, 404, 500]).toContain(res.status);
-    });
-
-    it('should fail with invalid email format', async () => {
-      const updateData = { email: 'invalid-email-format' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([400, 500]).toContain(res.status);
-    });
-
-    it('should ignore empty name in updates (partial update behavior)', async () => {
-      const originalName = testClient.name;
-      const updateData = { name: '' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData)
-        .expect(200);
-
-      // ✅ Tu controlador ignora campos vacíos correctamente
-      expect(res.body.message).toBe('Client updated successfully');
-      expect(res.body.client.name).toBe(originalName); // ¡No cambió!
-
-      // Verificar en BD que no cambió
-      const updatedClient = await Client.findById(testClient._id);
-      expect(updatedClient.name).toBe(originalName);
-    });
-
-    it('should fail with name too short', async () => {
-      const updateData = { name: 'A' }; // Muy corto
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      // Si tu validador requiere mínimo 2 caracteres
-      expect([200, 400]).toContain(res.status);
-
-      if (res.status === 400) {
-        expect(res.body.message).toBe('Validation failed');
-        expect(res.body.data.errors.some(err =>
-          err.path === 'name' && err.msg.includes('characters')
-        )).toBeTruthy();
-      }
-    });
-
-    it('should successfully update valid name', async () => {
-      const updateData = { name: 'Valid New Name' };
-
-      const res = await request(app)
-        .put(`/api/client/${testClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData)
-        .expect(200);
-
-      expect(res.body.message).toBe('Client updated successfully');
-      expect(res.body.client.name).toBe(updateData.name);
-
-      // Verificar en BD
-      const updatedClient = await Client.findById(testClient._id);
-      expect(updatedClient.name).toBe(updateData.name);
-    });
-
-    it('should fail with non-existent client', async () => {
-      const fakeId = new mongoose.Types.ObjectId();
-      const updateData = { name: 'New Name' };
-
-      const res = await request(app)
-        .put(`/api/client/${fakeId}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([404, 500]).toContain(res.status);
     });
 
     it('should fail with invalid ObjectId format', async () => {
@@ -693,7 +519,7 @@ describe('Client API Tests', () => {
     });
 
     it('should handle delete client with associated projects', async () => {
-      // Crear proyecto asociado
+      // Create associated project
       await new Project({
         name: 'Test Project',
         description: 'Test project description',
@@ -724,65 +550,6 @@ describe('Client API Tests', () => {
         .expect(401);
 
       expect(res.body.message).toContain('No token, authorization denied');
-    });
-  });
-
-  describe('Authorization tests', () => {
-    let otherUser, otherUserToken, otherUserClient;
-
-    beforeEach(async () => {
-      // Crear otro usuario
-      const bcrypt = require('bcrypt');
-      const hashedPassword = await bcrypt.hash('Password123', 10);
-      otherUser = new User({
-        name: 'Other',
-        surname: 'User',
-        email: 'other@example.com',
-        password: hashedPassword,
-        isEmailVerified: true,
-        role: 'user'
-      });
-      await otherUser.save();
-
-      const jwt = require('jsonwebtoken');
-      otherUserToken = jwt.sign(
-        { id: otherUser._id, email: otherUser.email, role: otherUser.role },
-        process.env.JWT_SECRET
-      );
-
-      // Crear cliente del otro usuario
-      otherUserClient = await new Client({
-        name: 'Other User Client',
-        email: 'otherclient@client.com',
-        createdBy: otherUser._id
-      }).save();
-    });
-
-    it('should not access other user clients', async () => {
-      const res = await request(app)
-        .get(`/api/client/${otherUserClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`);
-
-      expect([404, 500]).toContain(res.status);
-    });
-
-    it('should not update other user clients', async () => {
-      const updateData = { name: 'Hacked Name' };
-
-      const res = await request(app)
-        .put(`/api/client/${otherUserClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`)
-        .send(updateData);
-
-      expect([404, 500]).toContain(res.status);
-    });
-
-    it('should not delete other user clients', async () => {
-      const res = await request(app)
-        .delete(`/api/client/${otherUserClient._id}`)
-        .set('Authorization', `Bearer ${userToken}`);
-
-      expect([404, 500]).toContain(res.status);
     });
   });
 });

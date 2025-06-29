@@ -33,7 +33,7 @@ exports.auth = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(token, config.jwtSecret);
 
-      // Verificar si el usuario existe y no está eliminado
+      // Verify if the user exists and is not deleted
       const user = await User.findById(decoded.id);
       if (!user) {
         return res.status(404).json({ message: 'User not found' });

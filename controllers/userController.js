@@ -486,12 +486,12 @@ exports.inviteTeamMember = async (req, res) => {
 
         // Verificar el rol
         if (role && role !== 'guest') {
-            return res.status(400).json({ message: 'Los usuarios invitados solo pueden tener rol "guest"' });
+            return res.status(400).json({ message: 'Invited users can only have "guest" role' });
         }
 
         const owner = await User.findById(ownerId);
         if (!owner || !owner.company) {
-            return res.status(400).json({ message: 'Debe configurar los datos de su compañía antes de invitar miembros' });
+            return res.status(400).json({ message: 'You must configure your company data before inviting members' });
         }
 
         let invitedUser = await User.findOne({ email });
@@ -561,6 +561,6 @@ exports.inviteTeamMember = async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).json({ message: 'Error del servidor' });
+        res.status(500).json({ message: 'Server error' });
     }
 };

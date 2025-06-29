@@ -1,4 +1,4 @@
-// jest.config.js
+// File: jest.config.js
 module.exports = {
   // Directorios donde Jest buscará archivos de test
   testMatch: [
