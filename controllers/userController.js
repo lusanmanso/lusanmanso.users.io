@@ -553,7 +553,7 @@ exports.inviteTeamMember = async (req, res) => {
         }
 
         res.status(201).json({
-            message: 'Invitación enviada con éxito',
+            message: 'Invitation sent',
             user: {
                 email: newUser.email,
                 role: newUser.role
