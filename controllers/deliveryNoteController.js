@@ -113,7 +113,7 @@ const generatePdfBuffer = async (note) => {
             reject(new ApiError(500, 'PDF generation stream failed.', 'PDF_STREAM_ERROR', { detail: err.message }));
          });
 
-         // --- PDF Content Structure ---
+         // PDF Content Structure
          doc.fontSize(18).text(`Delivery Note #${note.deliveryNoteNumber || 'N/A'}`, { align: 'center' });
          doc.fontSize(10).text(`Date: ${note.date ? new Date(note.date).toLocaleDateString('en-US') : 'N/A'}`, { align: 'right' });
          doc.moveDown(2);
@@ -124,10 +124,10 @@ const generatePdfBuffer = async (note) => {
             const user = note.createdBy;
             doc.text(`${user.firstName || ''} ${user.lastName || ''} (${user.email || 'N/A'})`);
             if (user.company?.name) {
-               doc.text(`Empresa: ${user.company.name} (CIF: ${user.company.cif || 'N/A'})`);
+               doc.text(`Company: ${user.company.name} (CIF: ${user.company.cif || 'N/A'})`);
                if (user.company.address?.street) {
                   doc.text(
-                     `Dirección: ${user.company.address.street}, ` +
+                     `Address: ${user.company.address.street}, ` +
                      `${user.company.address.city || ''} ` +
                      `${user.company.address.postalCode || ''}, ` +
                      `${user.company.address.country || ''}`
@@ -150,7 +150,7 @@ const generatePdfBuffer = async (note) => {
             doc.text(`Tax ID: ${client.cif || 'N/A'}`);
             doc.text(`Address: ${client.address || 'N/A'}`);
          } else {
-            doc.text('Datos del cliente no disponibles.');
+            doc.text('Client data not available.');
          }
          doc.moveDown();
 
@@ -160,7 +160,7 @@ const generatePdfBuffer = async (note) => {
             doc.text(`${note.project.name || 'N/A'}`);
             if (note.project.description) doc.fontSize(10).text(`Description: ${note.project.description}`, { oblique: true });
          } else {
-            doc.text('Datos del proyecto no disponibles.');
+            doc.text('Project data not available.');
          }
          doc.moveDown();
 
