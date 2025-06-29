@@ -731,7 +731,7 @@ describe('User API Tests', () => {
         .send(inviteData)
         .expect(201);
 
-      expect(res.body.message).toContain('Invitación enviada'); // Mensaje en español
+      expect(res.body.message).toContain('Invitation sent'); // Mensaje en español
       expect(res.body.user.email).toBe(inviteData.email);
       expect(res.body.user.role).toBe('guest');
 
