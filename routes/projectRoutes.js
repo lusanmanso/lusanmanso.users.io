@@ -3,11 +3,11 @@ const express = require('express');
 const projectController = require('../controllers/projectController');
 const { auth } = require('../middleware/auth');
 const { validateCreateProject, validateUpdateProject, validateProjectId } = require('../validators/projectValidators');
-const { asyncHandler } = require('../middleware/handleError'); // Importar con desestructuración
+const { asyncHandler } = require('../middleware/handleError');
 
 const router = express.Router();
 
-router.use(auth); // Aplicar auth a todas las rutas
+router.use(auth); // Apply auth to all routes
 
 /**
  * @openapi
@@ -50,8 +50,8 @@ router.use(auth); // Aplicar auth a todas las rutas
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/',
-   validateCreateProject, // Usar el nombre correcto importado
-   asyncHandler(projectController.createProject) // Envolver controlador
+   validateCreateProject,
+   asyncHandler(projectController.createProject)
 );
 
 /**
@@ -81,7 +81,7 @@ router.post('/',
  *       '500':
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/', asyncHandler(projectController.getProjects)); // Envolver controlador
+router.get('/', asyncHandler(projectController.getProjects));
 
 /**
  * @route GET /api/project/archived
@@ -110,7 +110,7 @@ router.get('/', asyncHandler(projectController.getProjects)); // Envolver contro
  *       '500':
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/archived', asyncHandler(projectController.getArchivedProjects)); // Envolver controlador
+router.get('/archived', asyncHandler(projectController.getArchivedProjects));
 
 /**
  * @route GET /api/project/:id
@@ -149,8 +149,8 @@ router.get('/archived', asyncHandler(projectController.getArchivedProjects)); //
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/:id',
-   validateProjectId, // Añadir validador de ID
-   asyncHandler(projectController.getProjectById) // Envolver controlador
+   validateProjectId,
+   asyncHandler(projectController.getProjectById)
 );
 
 /**
