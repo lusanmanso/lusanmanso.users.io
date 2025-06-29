@@ -2,7 +2,6 @@
 const express = require('express');
 const projectController = require('../controllers/projectController');
 const { auth } = require('../middleware/auth');
-// --- Importaciones Corregidas ---
 const { validateCreateProject, validateUpdateProject, validateProjectId } = require('../validators/projectValidators');
 const { asyncHandler } = require('../middleware/handleError'); // Importar con desestructuración
 
@@ -197,9 +196,9 @@ router.get('/:id',
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.put('/:id',
-   // validateProjectId, // validateUpdateProject ya incluye la validación del ID del param
-   validateUpdateProject, // Añadir validador de update (usa el nombre correcto)
-   asyncHandler(projectController.updateProject) // Envolver controlador
+   // validateProjectId - the next validator already includes the ID
+   validateUpdateProject,
+   asyncHandler(projectController.updateProject) // Wrap controller
 );
 
 /**
@@ -233,8 +232,8 @@ router.put('/:id',
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.patch('/archive/:id',
-   validateProjectId, // Añadir validador de ID
-   asyncHandler(projectController.archiveProject) // Envolver controlador
+   validateProjectId,
+   asyncHandler(projectController.archiveProject) // Wrap controller
 );
 
 /**
@@ -268,8 +267,8 @@ router.patch('/archive/:id',
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.patch('/recover/:id',
-   validateProjectId, // Añadir validador de ID
-   asyncHandler(projectController.recoverProject) // Envolver controlador
+   validateProjectId,
+   asyncHandler(projectController.recoverProject)
 );
 
 /**
@@ -303,8 +302,8 @@ router.patch('/recover/:id',
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.delete('/:id',
-   validateProjectId, // Añadir validador de ID
-   asyncHandler(projectController.deleteProject) // Envolver controlador
+   validateProjectId,
+   asyncHandler(projectController.deleteProject)
 );
 
 module.exports = router;
