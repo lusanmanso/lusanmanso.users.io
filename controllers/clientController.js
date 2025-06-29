@@ -157,20 +157,14 @@ exports.deleteClient = async (req, res) => {
    const userId = req.user.id;
    const clientId = req.params.id;
 
-   // Verify if the client exists and belongs to the user
+   // 1. Verify if the client exists and belongs to the user
    const client = await Client.findOne({ _id: clientId, createdBy: userId });
-
-   // If no projects are associated, delete the client
-   const result = await Client.deleteOne({ _id: clientId, createdBy: userId });
 
    if (!client) {
       throw new ApiError(404, 'Client not found or you do not have permission', 'not_found');
    }
 
-   if (result.deleteCount === 0) {
-      throw new ApiError(404, 'Client not found', 'client', { errors: [{ msg: 'Client not found' }] });
-   }
-
+   // 2. Check if the client has associated projects
    const associatedProjects = await Project.findOne({ client: clientId });
 
    if (associatedProjects) {
@@ -180,6 +174,13 @@ exports.deleteClient = async (req, res) => {
           'conflict',
           { errors: [{ msg: 'Client has existing projects and cannot be deleted permanently. Please delete all associated projects first.' }] }
       );
+   }
+
+   // 3. If no projects are associated, delete the client
+   const result = await Client.deleteOne({ _id: clientId, createdBy: userId });
+
+   if (result.deleteCount === 0) {
+      throw new ApiError(404, 'Client not found', 'client', { errors: [{ msg: 'Client not found' }] });
    }
 
    res.status(200).json({ message: 'Client deleted successfully' });
