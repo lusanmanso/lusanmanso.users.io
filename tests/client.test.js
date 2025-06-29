@@ -12,14 +12,14 @@ describe('Client API Tests', () => {
     await User.deleteMany({});
     await Client.deleteMany({});
     await Project.deleteMany({});
-  }, 30000); // ✅ Aumentar timeout a 30 segundos
+  }, 10000);
 
   afterAll(async () => {
     await User.deleteMany({});
     await Client.deleteMany({});
     await Project.deleteMany({});
     await mongoose.connection.close();
-  }, 30000); // ✅ Aumentar timeout a 30 segundos
+  }, 10000);
 
   beforeEach(async () => {
     await User.deleteMany({});
@@ -45,7 +45,7 @@ describe('Client API Tests', () => {
       { id: testUser._id, email: testUser.email, role: testUser.role },
       process.env.JWT_SECRET
     );
-  }, 20000); // ✅ Aumentar timeout a 20 segundos
+  }, 10000);
 
   describe('POST /api/client', () => {
     it('should create a new client successfully', async () => {
