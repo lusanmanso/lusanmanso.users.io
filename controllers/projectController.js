@@ -24,7 +24,7 @@ exports.createProject = async (req, res) => {
     throw new ApiError(404, 'Client not found or you do not have permission to assign it.', 'not_found');
   }
 
-  // Checl duplicated (name + client + user)
+  // Check duplicated (name + client + user)
   const existingProject = await Project.findOne({ name, client: clientId, createdBy: userId });
   if (existingProject) {
      throw new ApiError(409, 'A project with this name already exists for this client.', 'conflict');
