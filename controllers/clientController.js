@@ -1,5 +1,5 @@
 // File: controllers/clientController.js
-const validationResult = require('express-validator').validationResult; // TODO: .validationResult es necesario?
+const validationResult = require('express-validator').validationResult; // TODO: .validationResult is it necessary?
 const Client = require('../models/Client');
 const Project = require('../models/Project');
 const { ApiError } = require('../middleware/handleError');
@@ -175,7 +175,7 @@ exports.deleteClient = async (req, res) => {
 
    if (associatedProjects) {
       throw new ApiError(
-          409, // Nota: 409 Conflict es un buen código para indicar que la solicitud no puede ser completada debido a un conflicto con el estado actual del recurso.
+          409, // Note: 409 Conflict is a good code to indicate that the request cannot be completed because of a conflict with the resource's actual state
           'Cannot delete client: Client has associated projects.',
           'conflict',
           { errors: [{ msg: 'Client has existing projects and cannot be deleted permanently. Please delete all associated projects first.' }] }
