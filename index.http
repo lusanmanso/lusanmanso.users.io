@@ -1,42 +1,42 @@
-# Registro de usuario (POST)
+# User registration (POST)
 POST http://localhost:3000/api/user/register
 Content-Type: application/json
 
 {
-  "email": "usuario@ejemplo.com",
+  "email": "user@example.com",
   "password": "Password1!"
 }
 
-# Respuesta 201 con datos del usuario y token JWT
-# Error 409 si intentas registrar un email ya existente y verificado
-# Errores 400 si el email o password no cumplen las validaciones
+# Response 201 with user data and JWT token
+# Error 409 if you try to register an already existing and verified email
+# Errors 400 if email or password don't meet validations
 
-# Validación del email (PUT)
+# Email validation (PUT)
 PUT http://localhost:3000/api/user/validation
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
 
 {
-  "code": "123456"  // El código generado durante el registro
+  "code": "123456"  // The code generated during registration
 }
 
-# Respuesta 200 si el código es correcto
-# Error 400 si el código es incorrecto o ya se han agotado los intentos
+# Response 200 if the code is correct
+# Error 400 if the code is incorrect or attempts have been exhausted
 
 # Login (POST)
 POST http://localhost:3000/api/user/login
 Content-Type: application/json
 
 {
-  "email": "usuario@ejemplo.com",
+  "email": "user@example.com",
   "password": "Password1!"
 }
 
-# Respuesta 200 con datos del usuario y token JWT
-# Error 401 si las credenciales son incorrectas
-# Error 400 si el email no está verificado
+# Response 200 with user data and JWT token
+# Error 401 if credentials are incorrect
+# Error 400 if email is not verified
 
-# On boarding - Datos personales (PUT)
+# Onboarding - Personal data (PUT)
 PUT http://localhost:3000/api/user
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
@@ -47,20 +47,20 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiN
   "nif": "12345678Z"
 }
 
-# Respuesta 200 con los datos actualizados
-# Errores de validación si los datos no cumplen los requisitos
+# Response 200 with updated data
+# Validation errors if data doesn't meet requirements
 
-# On boarding - Datos de compañía (PATCH)
+# Onboarding - Company data (PATCH)
 PATCH http://localhost:3000/api/user/company
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
 
 {
     "company": {
-    "name": "Mi Empresa SL",
+    "name": "My Company SL",
     "cif": "B12345678",
     "address": {
-        "street": "Calle Principal 123",
+        "street": "Main Street 123",
         "city": "Madrid",
         "postalCode": "28001"
     },
@@ -68,56 +68,56 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiN
     }
 }
 
-# Respuesta 200 con los datos actualizados
-# Para autónomos, verifica que usa los datos personales
+# Response 200 with updated data
+# For autonomous workers, verifies that it uses personal data
 
 # Logo (PATCH)
 PATCH http://localhost:3000/api/user/logo
-Authorization: Bearer TU_TOKEN_JWT
+Authorization: Bearer YOUR_JWT_TOKEN
 Content-Type: multipart/form-data
 
-logo: [archivo de imagen]
+logo: [image file]
 
-# Respuesta 200 con la URL del logo guardado
-# Error si el archivo no es una imagen o excede el tamaño permitido
+# Response 200 with saved logo URL
+# Error if file is not an image or exceeds allowed size
 
-# Obtener usuario actual (GET)
+# Get current user (GET)
 GET http://localhost:3000/api/user
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
 
-# Respuesta 200 con los datos del usuario
+# Response 200 with user data
 
-# Eliminar usuario (DELETE)
+# Delete user (DELETE)
 DELETE http://localhost:3000/api/user?soft=true
-Authorization: Bearer TU_TOKEN_JWT
+Authorization: Bearer YOUR_JWT_TOKEN
 
-# Respuesta 200 confirmando la eliminación
-# Cambia soft=true a soft=false para probar la eliminación permanente
+# Response 200 confirming deletion
+# Change soft=true to soft=false to test permanent deletion
 
-# Recuperación de contraseña
+# Password recovery
 POST http://localhost:3000/api/user/recover-password
 Content-Type: application/json
 
 {
-  "email": "usuario@ejemplo.com"
+  "email": "user@example.com"
 }
 
-# Después de recibir el código
+# After receiving the code
 POST http://localhost:3000/api/user/reset-password
 Content-Type: application/json
 
 {
-  "email": "usuario@ejemplo.com",
+  "email": "user@example.com",
   "code": "123456",
-  "newPassword": "NuevaPassword1!"
+  "newPassword": "NewPassword1!"
 }
 
-# Invitar a compañeros
+# Invite teammates
 POST http://localhost:3000/api/user/invite
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94   
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiNjdkY2E3NWVjNmYwODFiNGE2OTVkMDU0IiwiZW1haWwiOiJlbWFpbEBlamVtcGxvLmNvbSIsInJvbGUiOiJ1c2VyIn0sImlhdCI6MTc0MjUxNDAxNCwiZXhwIjoxNzQyNjAwNDE0fQ.rB1E5E5xOZTHEe4Z1-DQCDNhTULjCcjO1TNhugsQI94
 
 {
-  "email": "invitado@ejemplo.com",
+  "email": "guest@example.com",
   "role": "guest"
 }
