@@ -51,7 +51,7 @@ const validateUpdateProject = [
   validateMongoId('id'), // Validate the ID in the URL parameter
   validateOptionalString('name', 3),
   validateOptionalString('description', 10),
-  validateMongoIdBody('clientId', { optional: true }), // Allow updating client association
+  validateMongoIdBody('client', { optional: true }), // Allow updating client association
   validateOptionalDate('startDate'),
   validateOptionalDate('endDate'),
   body('endDate').custom((value, { req }) => {
