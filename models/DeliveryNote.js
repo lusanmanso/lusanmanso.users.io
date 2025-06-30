@@ -1,4 +1,4 @@
-// File: models/DeliveryNote.js
+// File: models/DeliveryNote.js - CORRECTED VERSION
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -19,54 +19,56 @@ const DeliveryNoteItemSchema = new Schema({
    quantity: {
       type: Number,
       required: [true, 'Item quantity/hours is required'],
-      min: [0.01, 'Quantity must be positive'], // Allows for fractional hours/quantities if needed
+      min: [0.01, 'Quantity must be positive'],
    },
-   unitPrice: { // Optional: Primarily for materials/services, could be hourly rate
+   unitPrice: {
       type: Number,
       min: [0, 'Unit price cannot be negative'],
-      default: null,
+      default: 0,
    },
-   person: { // Optional: Relevant for 'hours' type items
+   person: {
       type: String,
       trim: true,
       default: null,
    },
-   // Consider adding 'type' ('hours'/'material') if needed, though the PDF implies it can contain both mixed or just one type.
-   // The current structure allows flexibility.
-}, { _id: true }); // Enable IDs for subdocuments if needed later
+}, { _id: true });
 
 /**
  * Schema definition for Delivery Notes.
  * @typedef {Object} DeliveryNote
- * @property {string} deliveryNoteNumber - Unique identifier for the delivery note (likely unique per user/project).
+ * @property {string} deliveryNoteNumber - Unique identifier for the delivery note.
  * @property {Schema.Types.ObjectId} project - Reference to the Project this note belongs to.
  * @property {Schema.Types.ObjectId} createdBy - Reference to the User who created the note.
- * @property {Schema.Types.ObjectId} client - Reference to the Client associated with the project/note. Added for easier PDF generation and querying.
+ * @property {Schema.Types.ObjectId} client - Reference to the Client associated with the project/note.
  * @property {Date} date - Date the delivery note was issued.
- * @property {Array<DeliveryNoteItem>} items - Array containing details of hours or materials. Can be simple (one entry) or multiple[cite: 6].
+ * @property {Array<DeliveryNoteItem>} items - Array containing details of hours or materials.
+ * @property {number} totalAmount - Total amount calculated from items.
+ * @property {string} status - Status of the delivery note.
  * @property {boolean} isSigned - Flag indicating if the note has been signed.
- * @property {Date} [signedAt] - Timestamp when the note was signed.
- * @property {string} [signatureUrl] - URL (potentially IPFS CID) of the signature image[cite: 8].
- * @property {string} [pdfUrl] - URL (potentially IPFS CID) of the generated PDF after signing[cite: 8].
+ * @property {Date} [signedDate]
+ * @property {string} [signerName] - Name of the person who signed.
+ * @property {string} [signerTitle] - Title of the person who signed.
+ * @property {string} [signatureUrl] - URL (potentially IPFS CID) of the signature image.
+ * @property {string} [pdfUrl] - URL (potentially IPFS CID) of the generated PDF after signing.
  * @property {string} [notes] - Optional additional notes.
  */
 const DeliveryNoteSchema = new Schema({
-   deliveryNoteNumber: { // Consider if this should be auto-generated or user-provided
+   deliveryNoteNumber: {
       type: String,
       required: true,
       trim: true,
    },
    project: {
       type: Schema.Types.ObjectId,
-      ref: 'Project', // Reference to the Project model
+      ref: 'Project',
       required: [true, 'Project is required for the delivery note']
    },
-   createdBy: { // Store the creator for permission checks
+   createdBy: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true
    },
-   client: { // Added for convenience, derived from project initially but stored
+   client: {
       type: Schema.Types.ObjectId,
       ref: 'Client',
       required: true
@@ -76,27 +78,47 @@ const DeliveryNoteSchema = new Schema({
       required: [true, 'Delivery note date is required'],
       default: Date.now
    },
-   items: { // Array for hours and/or materials [cite: 6]
+   items: {
       type: [DeliveryNoteItemSchema],
       required: true,
       validate: [
          { validator: (val) => val.length > 0, msg: 'Delivery note must have at least one item.' }
       ]
    },
+   totalAmount: {
+      type: Number,
+      default: 0,
+      min: [0, 'Total amount cannot be negative']
+   },
+   status: {
+      type: String,
+      enum: ['draft', 'sent', 'signed'],
+      default: 'draft'
+   },
    isSigned: {
       type: Boolean,
       default: false
    },
-   signedAt: { // Timestamp of signing
+   signedDate: {
       type: Date,
       default: null
    },
-   signatureUrl: { // IPFS CID or other cloud URL for the signature image [cite: 8]
+   signerName: {
       type: String,
       trim: true,
       default: null
    },
-   pdfUrl: { // IPFS CID or other cloud URL for the signed PDF [cite: 8]
+   signerTitle: {
+      type: String,
+      trim: true,
+      default: null
+   },
+   signatureUrl: {
+      type: String,
+      trim: true,
+      default: null
+   },
+   pdfUrl: {
       type: String,
       trim: true,
       default: null
@@ -107,24 +129,41 @@ const DeliveryNoteSchema = new Schema({
       default: null
    }
 }, {
-   timestamps: true // Adds createdAt and updatedAt automatically
+   timestamps: true
 });
 
 // Index to potentially speed up lookups by user and project
 DeliveryNoteSchema.index({ createdBy: 1, project: 1, date: -1 });
-// Unique index for delivery note number per user (adjust if uniqueness scope is different)
+// Unique index for delivery note number per user
 DeliveryNoteSchema.index({ createdBy: 1, deliveryNoteNumber: 1 }, { unique: true });
 
-// Pre-save hook to ensure the client is associated with the project's creator
+// Pre-save hook to automatically calculate totalAmount
+DeliveryNoteSchema.pre('save', function(next) {
+   if (this.items && this.items.length > 0) {
+      this.totalAmount = this.items.reduce((total, item) => {
+         return total + (item.quantity * (item.unitPrice || 0));
+      }, 0);
+   }
+   next();
+});
+
 DeliveryNoteSchema.pre('validate', async function (next) {
+   // Only validate project if it's new or project has been modified
    if (this.isNew || this.isModified('project')) {
       try {
          const Project = mongoose.model('Project');
-         // Fetch the project to get the client and verify ownership
-         const projectDoc = await Project.findOne({ _id: this.project, createdBy: this.createdBy, archived: false });
+         const projectDoc = await Project.findOne({
+            _id: this.project,
+            createdBy: this.createdBy,
+            archived: false
+         });
+
          if (!projectDoc) {
-            return next(new Error('Project not found, archived, or does not belong to the user.'));
+            const error = new Error('Project not found, archived, or does not belong to the user.');
+            error.code = 'PROJECT_NOT_FOUND';
+            return next(error);
          }
+
          // Automatically set the client based on the project
          this.client = projectDoc.client;
       } catch (err) {

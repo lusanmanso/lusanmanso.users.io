@@ -277,14 +277,37 @@ const createDeliveryNote = async (req, res) => {
       const userId = req.user.id;
       const { deliveryNoteNumber, date, projectId, items, notes } = req.body;
 
+      const Project = require('../models/Project');
+      const projectDoc = await Project.findOne({
+         _id: projectId,
+         createdBy: userId,
+         archived: false
+      });
+
+      if (!projectDoc) {
+         throw new ApiError(404, 'Project not found or access denied.', 'PROJECT_NOT_FOUND');
+      }
+
+      // Verify number duplicates
+      const existingNote = await DeliveryNote.findOne({
+         deliveryNoteNumber,
+         createdBy: userId
+      });
+
+      if (existingNote) {
+         throw new ApiError(409, 'Delivery note number already exists.', 'DUPLICATE_NUMBER');
+      }
+
       const newDeliveryNote = new DeliveryNote({
          deliveryNoteNumber,
          date,
          project: projectId,
+         client: projectDoc.client,
          createdBy: userId,
          items,
-         notes,
+         notes: notes || null,
          isSigned: false,
+         status: 'draft'
       });
 
       await newDeliveryNote.save({ session }); // Pre-save hook in model links client
@@ -302,14 +325,27 @@ const createDeliveryNote = async (req, res) => {
 
    } catch (error) {
       await session.abortTransaction();
-      if (error.code === 11000) { // MongoDB duplicate key error
-         throw new ApiError(409, 'Delivery note number already exists for this user.', 'DUPLICATE_DELIVERY_NOTE_NUMBER');
+
+      if (error instanceof ApiError) {
+         throw error;
       }
-      if (error.name === 'ValidationError' || error.message.includes('Project not found') || error.message.includes('Client does not exist')) {
-         throw new ApiError(400, error.message, 'VALIDATION_ERROR');
+
+      // MongoDB duplicate key error
+      if (error.code === 11000) {
+         throw new ApiError(409, 'Delivery note number already exists.', 'DUPLICATE_DELIVERY_NOTE_NUMBER');
       }
+
+      if (error.name === 'ValidationError') {
+         throw new ApiError(400, 'Validation failed', 'VALIDATION_ERROR');
+      }
+
+      // Spcific errors from the pre-hook validation
+      if (error.message && error.message.includes('Project not found')) {
+         throw new ApiError(404, 'Project not found or access denied.', 'PROJECT_NOT_FOUND');
+      }
+
       console.error('Error creating delivery note:', error);
-      throw new ApiError(500, 'Failed to create delivery note.', 'CREATE_NOTE_ERROR', { detail: error.message });
+      throw new ApiError(500, 'Failed to create delivery note.', 'CREATE_NOTE_ERROR');
    } finally {
       session.endSession();
    }
@@ -335,8 +371,10 @@ const getAllDeliveryNotes = async (req, res) => {
       const noteObj = note.toObject();
       return {
          ...noteObj,
-         signatureGatewayUrl: getIpfsUrl(noteObj.signatureUrl),
-         pdfGatewayUrl: getIpfsUrl(noteObj.pdfUrl),
+         signatureGatewayUrl: noteObj.signatureUrl ?
+            `https://gateway.pinata.cloud/ipfs/${noteObj.signatureUrl.replace('ipfs://', '')}` : null,
+         pdfGatewayUrl: noteObj.pdfUrl ?
+            `https://gateway.pinata.cloud/ipfs/${noteObj.pdfUrl.replace('ipfs://', '')}` : null,
       };
    });
 
