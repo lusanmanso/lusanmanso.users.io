@@ -19,13 +19,13 @@ exports.createProject = async (req, res) => {
   const { name, description, client } = req.body;
   const userId = req.user.id;
 
-  const clientDoc = await Client.findOne({ _id: clientId, createdBy: userId, archived: false });
+  const clientDoc = await Client.findOne({ _id: client, createdBy: userId, archived: false });
   if (!clientDoc) {
     throw new ApiError(404, 'Client not found or you do not have permission to assign it.', 'not_found');
   }
 
   // Check duplicated (name + client + user)
-  const existingProject = await Project.findOne({ name, client: clientId, createdBy: userId });
+  const existingProject = await Project.findOne({ name, client, createdBy: userId });
   if (existingProject) {
      throw new ApiError(409, 'A project with this name already exists for this client.', 'conflict');
   }
@@ -33,7 +33,7 @@ exports.createProject = async (req, res) => {
   const project = new Project({
     name,
     description,
-    client: clientId,
+    client,
     createdBy: userId
   });
 
@@ -95,7 +95,7 @@ exports.updateProject = async (req, res) => {
 
   const userId = req.user.id;
   const projectId = req.params.id;
-  const { name, description, clientId: newClientId } = req.body;
+  const { name, description, client: newClientId } = req.body;
 
   const project = await Project.findOne({ _id: projectId, createdBy: userId });
   if (!project) {
