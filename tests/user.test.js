@@ -1,3 +1,4 @@
+// File: tests/user.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../server');
@@ -11,7 +12,7 @@ jest.mock('../utils/handleEmail', () => ({
   sendInvitationEmail: jest.fn()
 }));
 
-describe('User API Tests - Complete Coverage', () => {
+describe('User API Tests', () => {
   let testUser, userToken, guestToken;
 
   beforeAll(async () => {
