@@ -13,14 +13,14 @@ const { ApiError } = require('../middleware/handleError');
 exports.createProject = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new ApiError(400, 'Validation errors', 'validation', { errors: errors.array() });
+    throw new ApiError(400, 'Validation failed', 'validation', { errors: errors.array() });
   }
 
-  const { name, description, client: clientId } = req.body;
+  const { name, description, client } = req.body;
   const userId = req.user.id;
 
-  const client = await Client.findOne({ _id: clientId, createdBy: userId, archived: false });
-  if (!client) {
+  const clientDoc = await Client.findOne({ _id: clientId, createdBy: userId, archived: false });
+  if (!clientDoc) {
     throw new ApiError(404, 'Client not found or you do not have permission to assign it.', 'not_found');
   }
 
@@ -90,12 +90,12 @@ exports.getProjectById = async (req, res) => {
 exports.updateProject = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    throw new ApiError(400, 'Validation errors', 'validation', { errors: errors.array() });
+    throw new ApiError(400, 'Validation failed', 'validation', { errors: errors.array() });
   }
 
   const userId = req.user.id;
   const projectId = req.params.id;
-  const { name, description, client: newClientId } = req.body;
+  const { name, description, clientId: newClientId } = req.body;
 
   const project = await Project.findOne({ _id: projectId, createdBy: userId });
   if (!project) {

@@ -17,7 +17,7 @@ const Project = require('../models/Project'); // Needed for uniqueness check if 
 const validateCreateProject = [
   validateRequiredString('name', 3),
   validateRequiredString('description', 10),
-  validateMongoIdBody('clientId'), // Ensure clientId is a valid ObjectId in the body
+  validateMongoIdBody('client'), // Ensure clientId is a valid ObjectId in the body
   validateOptionalDate('startDate'),
   validateOptionalDate('endDate'),
   body('endDate').custom((value, { req }) => {

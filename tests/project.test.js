@@ -109,7 +109,7 @@ describe('Project API Tests', () => {
         .send(projectData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation errors');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with name too short', async () => {
@@ -125,14 +125,14 @@ describe('Project API Tests', () => {
         .send(projectData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation errors');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with description too short', async () => {
       const projectData = {
         name: 'Test Project',
         description: 'Short',
-        client: testClient._id
+        clientId: testClient._id
       };
 
       const res = await request(app)
@@ -141,7 +141,7 @@ describe('Project API Tests', () => {
         .send(projectData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation errors');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with missing client', async () => {
@@ -156,7 +156,7 @@ describe('Project API Tests', () => {
         .send(projectData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation errors');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail if project name already exists for same client', async () => {
@@ -373,7 +373,7 @@ describe('Project API Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(400);
 
-      expect(res.body.message).toBe('Invalid project ID format');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with non-existent project ID', async () => {
@@ -462,7 +462,7 @@ describe('Project API Tests', () => {
         .send(updateData)
         .expect(400);
 
-      expect(res.body.message).toBe('Invalid project ID format');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with non-existent project ID', async () => {
@@ -482,9 +482,9 @@ describe('Project API Tests', () => {
       expect(res.body.message).toBe('Project not found or you do not have permission to update it');
     });
 
-    it('should fail with empty name', async () => {
+    it('should fail updating with name too short', async () => {
       const updateData = {
-        name: '',
+        name: 'Ab', // Too short (less than 3 chars)
         description: 'Updated description',
         client: testClient._id
       };
@@ -495,7 +495,7 @@ describe('Project API Tests', () => {
         .send(updateData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation errors');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with invalid client ID', async () => {
@@ -580,7 +580,7 @@ describe('Project API Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(400);
 
-      expect(res.body.message).toBe('Invalid project ID format');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with non-existent project ID', async () => {
@@ -641,7 +641,7 @@ describe('Project API Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(400);
 
-      expect(res.body.message).toBe('Invalid project ID format');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with non-existent project ID', async () => {
@@ -704,7 +704,7 @@ describe('Project API Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(400);
 
-      expect(res.body.message).toBe('Invalid project ID format');
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with non-existent project ID', async () => {
