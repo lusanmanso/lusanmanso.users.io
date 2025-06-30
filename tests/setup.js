@@ -14,10 +14,7 @@ module.exports = async () => {
   }
 
   console.log(`Attempting to connect to MongoDB test database: ${mongoURI_test}`);
-  await mongoose.connect(mongoURI_test, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
+  await mongoose.connect(mongoURI_test);
 
   // Guardar la conexión para que globalTeardown pueda cerrarla
   global.__MONGO_DB_CONNECTION__ = mongoose.connection;
