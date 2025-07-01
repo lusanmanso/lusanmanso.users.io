@@ -126,7 +126,6 @@ const DeliveryNoteSchema = new Schema({
    notes: {
       type: String,
       trim: true,
-      default: null
    }
 }, {
    timestamps: true

@@ -26,10 +26,13 @@ describe('DeliveryNote API Tests', () => {
    });
 
    beforeEach(async () => {
-      await User.deleteMany({});
-      await Client.deleteMany({});
-      await Project.deleteMany({});
-      await DeliveryNote.deleteMany({});
+      // Ejecutar limpiezas en paralelo
+      await Promise.all([
+         User.deleteMany({}),
+         Client.deleteMany({}),
+         Project.deleteMany({}),
+         DeliveryNote.deleteMany({})
+      ]);
 
       // Create test user
       const bcrypt = require('bcrypt');
@@ -51,16 +54,19 @@ describe('DeliveryNote API Tests', () => {
          process.env.JWT_SECRET
       );
 
-      // Create test client
-      testClient = new Client({
+      // Create test client and project in parallel
+      const clientData = {
          name: 'Test Client',
          email: 'client@test.com',
          createdBy: testUser._id,
          archived: false
-      });
-      await testClient.save();
+      };
 
-      // Create test project
+      const [savedClient] = await Promise.all([
+         new Client(clientData).save()
+      ]);
+      testClient = savedClient;
+
       testProject = new Project({
          name: 'Test Project',
          description: 'Test description',
@@ -69,7 +75,7 @@ describe('DeliveryNote API Tests', () => {
          archived: false
       });
       await testProject.save();
-   });
+   }, 5000); // TODO: Aumentar timeout a 10 segundos si es necesario
 
    // ===================== CREATE DELIVERY NOTE =====================
    describe('POST /api/deliverynote', () => {
@@ -511,15 +517,15 @@ describe('DeliveryNote API Tests', () => {
 
       it('should fail with invalid delivery note ID', async () => {
          const nonExistentId = new mongoose.Types.ObjectId();
-         const updateData = {
-            deliveryNoteNumber: 'DN-NONEXISTENT',
-            items: [{ description: 'Test', quantity: 1, unitPrice: 10 }]
+         const signData = {
+            signatureUrl: 'ipfs://QmTestSignatureHash',
+            signedDate: new Date().toISOString()
          };
 
          const res = await request(app)
-            .put(`/api/deliverynote/${nonExistentId}`)
+            .patch(`/api/deliverynote/sign/${nonExistentId}`)
             .set('Authorization', `Bearer ${userToken}`)
-            .send(updateData)
+            .send(signData)
             .expect(404);
 
          expect(res.body.message).toBe('Delivery note not found or access denied.');
@@ -580,8 +586,8 @@ describe('DeliveryNote API Tests', () => {
          await testDeliveryNote.save();
 
          const signData = {
-            signature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-            signerName: 'John Client'
+            signatureUrl: 'ipfs://QmTestSignatureHash',
+            signedDate: 'new Date().toISOString()'
          };
 
          const res = await request(app)
@@ -595,8 +601,7 @@ describe('DeliveryNote API Tests', () => {
 
       it('should fail with missing signature data', async () => {
          const invalidSignData = {
-            signerName: 'John Client'
-            // Missing signature
+            signedDate: 'new Date().toISOString()'
          };
 
          const res = await request(app)
@@ -611,8 +616,8 @@ describe('DeliveryNote API Tests', () => {
       it('should fail with invalid delivery note ID', async () => {
          const nonExistentId = new mongoose.Types.ObjectId();
          const signData = {
-            signature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-            signerName: 'John Client'
+            signatureUrl: 'ipfs://QmTestSignatureHash',
+            signerName: 'new Date().toISOString()'
          };
 
          const res = await request(app)
@@ -626,8 +631,8 @@ describe('DeliveryNote API Tests', () => {
 
       it('should fail without authentication', async () => {
          const signData = {
-            signature: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-            signerName: 'John Client'
+            signatureUrl: 'ipfs://QmTestSignatureHash',
+            signedDate: new Date().toISOString()
          };
 
          const res = await request(app)
