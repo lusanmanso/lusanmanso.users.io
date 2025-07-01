@@ -298,25 +298,33 @@ const createDeliveryNote = async (req, res) => {
          throw new ApiError(409, 'Delivery note number already exists.', 'DUPLICATE_NUMBER');
       }
 
-      const newDeliveryNote = new DeliveryNote({
+      const deliveryNoteData = {
          deliveryNoteNumber,
          date,
          project: projectId,
-         client: projectDoc.client,
          createdBy: userId,
          items,
-         notes: notes || null,
-         isSigned: false,
-         status: 'draft'
-      });
+         isSigned: false, // Default to unsigned
+         status: 'draft', // Default status
+      };
+
+      if (notes) {
+         deliveryNoteData.notes = notes; // Only set if provided
+      }
+
+      const newDeliveryNote = new DeliveryNote(deliveryNoteData);
 
       await newDeliveryNote.save({ session }); // Pre-save hook in model links client
       await session.commitTransaction();
 
+      /*
       const populatedNote = await DeliveryNote.findById(newDeliveryNote._id)
          .populate('createdBy', 'firstName lastName email')
          .populate('client', 'name email')
-         .populate('project', 'name');
+         .populate('project', 'name'); */
+
+      const populatedNote = await DeliveryNote.findById(newDeliveryNote._id)
+            .populate('createdBy', 'firstName lastName email');
 
       res.status(201).json({
          message: 'Delivery note created successfully.',

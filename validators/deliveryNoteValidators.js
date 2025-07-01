@@ -19,14 +19,7 @@ const DeliveryNote = require('../models/DeliveryNote'); // For uniqueness check
  * @constant {Array<import('express-validator').ValidationChain | Function>}
  */
 const validateCreateDeliveryNote = [
-  validateRequiredString('deliveryNoteNumber').custom(async (deliveryNoteNumber, { req }) => {
-    const userId = req.user?.id;
-    if (!userId) throw new Error('User ID not found for validation.');
-    const existingNote = await DeliveryNote.findOne({ deliveryNoteNumber, createdBy: userId }); // Corrected field name
-    if (existingNote) {
-      return Promise.reject('Delivery note number already exists for this user.');
-    }
-  }),
+  validateRequiredString('deliveryNoteNumber'),
   validateRequiredDate('date'),
   validateMongoIdBody('projectId'), // Ensure projectId is a valid ObjectId in the body
 
