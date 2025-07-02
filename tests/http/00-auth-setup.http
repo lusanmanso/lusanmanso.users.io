@@ -1,0 +1,173 @@
+### Authentication Setup and Environment Variables
+### This file should be used first to set up authentication and get tokens
+
+### ENVIRONMENT SETUP
+@baseUrl = http://localhost:3000/api
+
+### STEP 1: Register a new user
+# @name register
+POST {{baseUrl}}/user/register
+Content-Type: application/json
+
+{
+  "name": "Test",
+  "surname": "User",
+  "email": "test@example.com",
+  "password": "TestPassword123!",
+  "passwordConfirm": "TestPassword123!"
+}
+
+###
+
+### STEP 1B: Alternative - Create pre-verified user (if emails don't work)
+# Use this if the above fails due to email configuration
+# POST {{baseUrl}}/user/register
+# Content-Type: application/json
+#
+# {
+#   "name": "Test",
+#   "surname": "User",
+#   "email": "verified@example.com",
+#   "password": "TestPassword123!",
+#   "passwordConfirm": "TestPassword123!"
+# }
+
+###
+
+### STEP 2: Login to get token
+# @name login
+POST {{baseUrl}}/user/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "TestPassword123!"
+}
+
+###
+
+### STEP 3: Extract token automatically (VS Code REST Client)
+### The token will be automatically extracted from the login response
+@auth_token = {{login.response.body.token}}
+
+### ALTERNATIVE: Manual token setup
+### If automatic extraction doesn't work, copy the token manually:
+# @auth_token = YOUR_JWT_TOKEN_HERE
+
+### STEP 4: Verify authentication works
+GET {{baseUrl}}/user
+Authorization: Bearer {{auth_token}}
+
+###
+
+### STEP 5: Complete user onboarding (personal data)
+PUT {{baseUrl}}/user
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "firstName": "Test",
+  "lastName": "User",
+  "nif": "12345678Z",
+  "phone": "+34666123456"
+}
+
+###
+
+### STEP 6: Complete company data
+PATCH {{baseUrl}}/user/company
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "company": {
+    "name": "Test Company",
+    "cif": "B12345678",
+    "address": {
+      "street": "123 Test Street",
+      "city": "Madrid",
+      "postalCode": "28001",
+      "country": "Spain"
+    },
+    "isAutonomous": false
+  }
+}
+
+###
+
+### STEP 7: Create a test client
+# @name createClient
+POST {{baseUrl}}/client
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "name": "Test Client Corp",
+  "email": "client@testcorp.com"
+}
+
+### Extract client ID automatically (VS Code REST Client)
+@client_id = {{createClient.response.body.client._id}}
+
+### ALTERNATIVE: Manual client ID setup
+# @client_id = YOUR_CLIENT_ID_HERE
+
+###
+
+### STEP 8: Create a test project
+# @name createProject
+POST {{baseUrl}}/project
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "name": "Test Project",
+  "description": "A test project for API testing",
+  "client": "{{client_id}}"
+}
+
+### Extract project ID automatically (VS Code REST Client)
+@project_id = {{createProject.response.body.project._id}}
+
+### ALTERNATIVE: Manual project ID setup
+# @project_id = YOUR_PROJECT_ID_HERE
+
+###
+
+### STEP 9: Create a test delivery note
+# @name createDeliveryNote
+POST {{baseUrl}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{auth_token}}
+
+{
+  "deliveryNoteNumber": "TEST-DN-001",
+  "projectId": "{{project_id}}",
+  "date": "2025-01-15T10:00:00.000Z",
+  "items": [
+    {
+      "description": "Test Development Work",
+      "quantity": 8,
+      "unitPrice": 65.00,
+      "person": "Test Developer"
+    }
+  ],
+  "notes": "Test delivery note for API testing"
+}
+
+### Extract delivery note ID automatically (VS Code REST Client)
+@delivery_note_id = {{createDeliveryNote.response.body.data._id}}
+
+### ALTERNATIVE: Manual delivery note ID setup
+# @delivery_note_id = YOUR_DELIVERY_NOTE_ID_HERE
+
+###
+
+### VARIABLES SUMMARY FOR OTHER FILES:
+### Replace these in the respective .http files:
+### {{auth_token}} = JWT token from login
+### {{client_id}} = Client ID from created client
+### {{project_id}} = Project ID from created project
+### {{delivery_note_id}} = Delivery Note ID from created delivery note
+
+###
