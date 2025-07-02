@@ -138,3 +138,6 @@ dist
 
 # cursor
 .cursor
+
+# logos
+*.svg
