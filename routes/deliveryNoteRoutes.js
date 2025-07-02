@@ -344,8 +344,8 @@ router.patch(
  */
 router.patch(
     '/sign/:id',
-    validateDeliveryNoteId,
-    validateSignDeliveryNote, // Specific validation for signing action
+    // validateDeliveryNoteId,
+    validateSignDeliveryNote, // Already handles the ID
     asyncHandler(deliveryNoteController.signDeliveryNote)
 );
 

@@ -1,6 +1,7 @@
 // File: tests/deliveryNote.test.js
 const request = require('supertest');
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 const app = require('../server');
 const User = require('../models/User');
 const Client = require('../models/Client');
@@ -35,7 +36,6 @@ describe('DeliveryNote API Tests', () => {
       ]);
 
       // Create test user
-      const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash('Password123', 10);
       testUser = new User({
          name: 'Test',
@@ -587,7 +587,7 @@ describe('DeliveryNote API Tests', () => {
 
          const signData = {
             signatureUrl: 'ipfs://QmTestSignatureHash',
-            signedDate: 'new Date().toISOString()'
+            signedDate: new Date().toISOString()
          };
 
          const res = await request(app)
@@ -601,8 +601,9 @@ describe('DeliveryNote API Tests', () => {
 
       it('should fail with missing signature data', async () => {
          const invalidSignData = {
-            signedDate: 'new Date().toISOString()'
-         };
+            signedDate: new Date().toISOString()
+            // Missing required signatureUrl
+          };
 
          const res = await request(app)
             .patch(`/api/deliverynote/sign/${testDeliveryNote._id}`)
@@ -617,7 +618,7 @@ describe('DeliveryNote API Tests', () => {
          const nonExistentId = new mongoose.Types.ObjectId();
          const signData = {
             signatureUrl: 'ipfs://QmTestSignatureHash',
-            signerName: 'new Date().toISOString()'
+            signerName: new Date().toISOString()
          };
 
          const res = await request(app)

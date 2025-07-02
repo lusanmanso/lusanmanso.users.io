@@ -509,10 +509,11 @@ const updateDeliveryNote = async (req, res) => {
 const signDeliveryNote = async (req, res) => {
    const session = await mongoose.startSession();
    session.startTransaction();
+
    try {
       const userId = req.user.id;
       const { id } = req.params;
-      const { signatureUrl, signedDate } = req.body; // Expecting IPFS CID or cloud URL
+      const { signatureUrl, signedDate } = req.body;
 
       if (!signatureUrl) {
          throw new ApiError(400, 'Signature URL (e.g., IPFS CID) is required.', 'MISSING_SIGNATURE_URL');
@@ -525,15 +526,21 @@ const signDeliveryNote = async (req, res) => {
          .session(session);
 
       if (!deliveryNote) {
-         await session.abortTransaction(); session.endSession();
          throw new ApiError(404, 'Delivery note not found or access denied.', 'NOTE_NOT_FOUND');
       }
 
       if (deliveryNote.isSigned) {
+         await session.commitTransaction();
          const noteObj = deliveryNote.toObject();
-         const responseData = { ...noteObj, signatureGatewayUrl: getIpfsUrl(noteObj.signatureUrl), pdfGatewayUrl: getIpfsUrl(noteObj.pdfUrl) };
-         await session.abortTransaction(); session.endSession();
-         return res.status(200).json({ message: 'Delivery note is already signed.', data: responseData });
+         const responseData = {
+            ...noteObj,
+            signatureGatewayUrl: getIpfsUrl(noteObj.signatureUrl),
+            pdfGatewayUrl: getIpfsUrl(noteObj.pdfUrl)
+         };
+         return res.status(400).json({
+            message: 'Delivery note is already signed.',
+            data: responseData
+         });
       }
 
       deliveryNote.isSigned = true;
@@ -549,7 +556,11 @@ const signDeliveryNote = async (req, res) => {
       await session.commitTransaction();
 
       const noteObj = signedDeliveryNote.toObject();
-      const responseData = { ...noteObj, signatureGatewayUrl: getIpfsUrl(noteObj.signatureUrl), pdfGatewayUrl: getIpfsUrl(noteObj.pdfUrl) };
+      const responseData = {
+         ...noteObj,
+         signatureGatewayUrl: getIpfsUrl(noteObj.signatureUrl),
+         pdfGatewayUrl: getIpfsUrl(noteObj.pdfUrl)
+      };
 
       res.status(200).json({
          message: 'Delivery note signed and PDF uploaded successfully.',
@@ -557,9 +568,11 @@ const signDeliveryNote = async (req, res) => {
       });
 
    } catch (error) {
-      await session.abortTransaction();
-      console.error('Error signing delivery note:', error.message, error.stack);
-      if (error instanceof ApiError) throw error; // Re-throw ApiErrors (like IPFS_CONFIG_ERROR)
+      if (session.inTransaction()) {
+         await session.abortTransaction();
+      }
+
+      if (error instanceof ApiError) throw error;
       throw new ApiError(500, 'Failed to sign delivery note.', 'SIGN_NOTE_ERROR', { detail: error.message });
    } finally {
       session.endSession();
@@ -664,18 +677,18 @@ const deleteDeliveryNote = async (req, res) => {
 };
 
 const abortTransaction = async (session, errorToReThrow, next) => {
-    if (session && session.inTransaction()) {
-        try {
-            await session.abortTransaction();
-        } catch (abortErr) {
-            // Log this specific error, but don't prevent the original error from propagating
-            console.error('Error durante el aborto de la transacción (probablemente ya abortada):', abortErr.message);
-        }
-    }
-    if (session && session.open) {
-        await session.endSession();
-    }
-    next(errorToReThrow); // Always propagate the original error
+   if (session && session.inTransaction()) {
+      try {
+         await session.abortTransaction();
+      } catch (abortErr) {
+         // Log this specific error, but don't prevent the original error from propagating
+         console.error('Error durante el aborto de la transacción (probablemente ya abortada):', abortErr.message);
+      }
+   }
+   if (session && session.open) {
+      await session.endSession();
+   }
+   next(errorToReThrow); // Always propagate the original error
 };
 
 module.exports = {

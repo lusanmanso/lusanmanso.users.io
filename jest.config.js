@@ -21,4 +21,5 @@ module.exports = {
   forceExit: true,
   // Ruta donde se inicializan las variables de entorno de Jest
   // setupFilesAfterEnv: ['./tests/jest.setup.js'], // Puedes añadir esto si necesitas configurar algo antes de cada archivo de test (no cada test individual)
+  testTimeout: 15000, // 15 segundos para la wifi de biblioteca
 };
