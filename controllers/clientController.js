@@ -46,7 +46,8 @@ exports.createClient = async (req, res, next) => {
 exports.getClients = async (req, res, next) => {
    const userId = req.user.id; // From middleware auth
 
-   const clients = await Client.find({ createdBy: userId, archived: false }).populate('company', 'name');
+   // Cambios .populate('company', 'name');
+   const clients = await Client.find({ createdBy: userId, archived: false });
 
    res.status(200).json({
       message: 'Clients retrieved successfully',
@@ -63,7 +64,8 @@ exports.getClientById = async (req, res, next) => {
    const userId = req.user.id;
    const clientId = req.params.id;
 
-   const client = await Client.findOne({ _id: clientId, createdBy: userId, archived: false }).populate('company', 'name');
+   // Cambios .populate('company', 'name');
+   const client = await Client.findOne({ _id: clientId, createdBy: userId, archived: false });
 
    if (!client) {
       throw new ApiError(404, 'Client not found', 'client', { errors: [{ msg: 'Client not found' }] });
@@ -194,8 +196,8 @@ exports.deleteClient = async (req, res) => {
 exports.getArchivedClients = async (req, res) => {
    const userId = req.user.id;
 
-   const clients = await Client.find({ createdBy: userId, archived: true })
-                               .populate('company', 'name'); // Opcional
+   // Cambios .populate('company', 'name');
+   const clients = await Client.find({ createdBy: userId, archived: true });
 
    res.status(200).json(clients);
  };
