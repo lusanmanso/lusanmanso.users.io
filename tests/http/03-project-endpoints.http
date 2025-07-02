@@ -1,0 +1,62 @@
+### Project API Endpoints Testing
+### BASE URL
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4MDhjOWY0ZWZmNWRmOGYyNzk2NSIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDgyNTA4LCJleHAiOjE3NTE1Njg5MDh9.-gBEjC3XpE7R1SoL98R6kob3x82aCBGm6eSA3LLULII
+@clientId = 686580999f4eff5df8f2796a
+@projectId = 686581259f4eff5df8f2798c
+
+### 1. CREATE PROJECT
+POST {{baseUrl}}/project
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Website Redesign",
+  "description": "Complete redesign of corporate website with modern UI/UX",
+  "client": "{{clientId}}"
+}
+
+###
+
+### 2. GET ALL ACTIVE PROJECTS
+GET {{baseUrl}}/project
+Authorization: Bearer {{token}}
+
+###
+
+### 3. GET ARCHIVED PROJECTS
+GET {{baseUrl}}/project/archived
+Authorization: Bearer {{token}}
+
+###
+
+### 4. GET PROJECT BY ID
+GET {{baseUrl}}/project/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 5. UPDATE PROJECT
+PUT {{baseUrl}}/project/{{projectId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Website Redesign - Phase 2",
+  "description": "Updated scope: Complete redesign with e-commerce integration",
+  "client": "{{clientId}}"
+}
+
+###
+
+### 6. ARCHIVE PROJECT
+PATCH {{baseUrl}}/project/archive/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 7. RECOVER ARCHIVED PROJECT
+PATCH {{baseUrl}}/project/recover/{{projectId}}
+Authorization: Bearer {{token}}
+
+###
