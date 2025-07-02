@@ -2,6 +2,17 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+/**
+ * Project schema definition for managing project data
+ * @typedef {Object} ProjectSchema
+ * @property {string} name - The project's name (required, max 150 chars, trimmed)
+ * @property {string|null} description - Optional project description (max 500 chars, trimmed)
+ * @property {ObjectId} client - Reference to Client model (required)
+ * @property {ObjectId} createdBy - Reference to User who created this project (required)
+ * @property {boolean} archived - Soft delete flag (default: false)
+ * @property {Date} createdAt - Timestamp when document was created (auto-generated)
+ * @property {Date} updatedAt - Timestamp when document was last updated (auto-generated)
+ */
 const ProjectSchema = new Schema({
    name: {
       type: String,

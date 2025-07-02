@@ -2,6 +2,27 @@
 const mongoose = require('mongoose');
 const mongooseDelete = require('mongoose-delete');
 
+/**
+ * User schema definition for managing user accounts and authentication
+ * @typedef {Object} UserSchema
+ * @property {string} email - User's email address (required, unique, lowercase, trimmed)
+ * @property {string} password - User's encrypted password (required, min 8 chars)
+ * @property {string} firstName - User's first name (optional, trimmed)
+ * @property {string} lastName - User's last name (optional, trimmed)
+ * @property {string} nif - User's National Identification Number (optional, trimmed)
+ * @property {Object} company - Company information object
+ * @property {Object} logo - Company logo information object
+ * @property {boolean} isEmailVerified - Email verification status (default: false)
+ * @property {string} verificationCode - Email verification code (optional)
+ * @property {number} verificationAttempts - Count of verification attempts (default: 0)
+ * @property {number} maxVerificationAttempts - Maximum allowed verification attempts (default: 3)
+ * @property {string} passwordResetCode - Password reset verification code (optional)
+ * @property {Date} passwordResetExpires - Password reset code expiration date (optional)
+ * @property {string} role - User role in the system (enum: user/admin/guest, default: user)
+ * @property {Date} createdAt - Timestamp when document was created (auto-generated)
+ * @property {Date} updatedAt - Timestamp when document was last updated (auto-generated)
+ * @property {Date} deletedAt - Timestamp when document was soft deleted (mongoose-delete plugin)
+ */
 const UserSchema = new mongoose.Schema({
     // Basic fields for registration
     email: {
