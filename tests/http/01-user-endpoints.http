@@ -1,0 +1,153 @@
+### User API Endpoints Testing
+### BASE URL
+@baseUrl = http://localhost:3000/api
+@token =
+
+### 1. GENERAL - Welcome
+GET {{baseUrl}}/
+Content-Type: application/json
+
+###
+
+### 2. GENERAL - API Info
+GET {{baseUrl}}
+Content-Type: application/json
+
+###
+
+### 3. USER REGISTRATION
+POST {{baseUrl}}/user/register
+Content-Type: application/json
+
+{
+  "name": "John",
+  "surname": "Doe",
+  "email": "john.doe@example.com",
+  "password": "SecurePassword123!",
+  "passwordConfirm": "SecurePassword123!"
+}
+
+###
+
+### 4. USER LOGIN
+POST {{baseUrl}}/user/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "SecurePassword123!"
+}
+
+###
+
+### 5. EMAIL VALIDATION
+POST {{baseUrl}}/user/validation
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "code": "123456"
+}
+
+###
+
+### 6. GET CURRENT USER
+GET {{baseUrl}}/user
+Authorization: Bearer {{token}}
+
+###
+
+### 7. UPDATE PERSONAL DATA (Onboarding)
+PUT {{baseUrl}}/user
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "nif": "12345678Z",
+  "phone": "+34666123456"
+}
+
+###
+
+### 8. UPDATE COMPANY DATA (Onboarding)
+PATCH {{baseUrl}}/user/company
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "company": {
+    "name": "Tech Solutions Ltd",
+    "cif": "B12345678",
+    "address": {
+      "street": "123 Tech Street",
+      "city": "Madrid",
+      "postalCode": "28001",
+      "country": "Spain"
+    },
+    "isAutonomous": false
+  }
+}
+
+###
+
+### 9. UPLOAD LOGO
+PATCH {{baseUrl}}/user/logo
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="logo"; filename="logo.svg"
+Content-Type: image/svg+xml
+
+< ./assets/logo.svg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+
+### 10. FORGOT PASSWORD
+POST {{baseUrl}}/user/recover-password
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com"
+}
+
+###
+
+### 11. RESET PASSWORD
+POST {{baseUrl}}/user/reset-password
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "code": "544062",
+  "newPassword": "ResetPassword789!"
+}
+
+###
+
+### 12. INVITE USER
+POST {{baseUrl}}/user/invite
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "colleague@example.com",
+  "role": "guest"
+}
+
+###
+
+### 13. DELETE USER (Hard Delete)
+DELETE {{baseUrl}}/user?soft=false
+Authorization: Bearer {{token}}
+
+###
+
+### 14. DELETE USER (Soft Delete)
+DELETE {{baseUrl}}/user?soft=true
+Authorization: Bearer {{token}}
+
+###
