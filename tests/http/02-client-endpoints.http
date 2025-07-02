@@ -1,0 +1,76 @@
+### Client API Endpoints Testing
+### BASE URL
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4MDhjOWY0ZWZmNWRmOGYyNzk2NSIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDgyNTA4LCJleHAiOjE3NTE1Njg5MDh9.-gBEjC3XpE7R1SoL98R6kob3x82aCBGm6eSA3LLULII
+@clientId = 686580999f4eff5df8f2796a
+
+### 1. CREATE CLIENT
+POST {{baseUrl}}/client
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Acme Corporation",
+  "email": "contact@acme.com"
+}
+
+###
+
+### 2. GET ALL ACTIVE CLIENTS
+GET {{baseUrl}}/client
+Authorization: Bearer {{token}}
+
+###
+
+### 3. GET ARCHIVED CLIENTS
+GET {{baseUrl}}/client/archived
+Authorization: Bearer {{token}}
+
+###
+
+### 4. GET CLIENT BY ID
+GET {{baseUrl}}/client/{{clientId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 5. UPDATE CLIENT (PUT)
+PUT {{baseUrl}}/client/{{clientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Acme Corporation Updated",
+  "email": "newemail@acme.com"
+}
+
+###
+
+### 6. PARTIALLY UPDATE CLIENT (PATCH)
+PATCH {{baseUrl}}/client/{{clientId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "email": "updated@acme.com"
+}
+
+###
+
+### 7. ARCHIVE CLIENT (Soft Delete)
+PATCH {{baseUrl}}/client/{{clientId}}/archive
+Authorization: Bearer {{token}}
+
+###
+
+### 8. RECOVER ARCHIVED CLIENT
+PATCH {{baseUrl}}/client/{{clientId}}/recover
+Authorization: Bearer {{token}}
+
+###
+
+### 9. DELETE CLIENT (Hard Delete)
+DELETE {{baseUrl}}/client/{{clientId}}
+Authorization: Bearer {{token}}
+
+###
