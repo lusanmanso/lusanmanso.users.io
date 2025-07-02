@@ -1,0 +1,142 @@
+### Delivery Note API Endpoints Testing
+### BASE URL
+@baseUrl = http://localhost:3000/api
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4ZDA0YjQ2NDc2ZTk2N2FkNmQ4YiIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDg1Nzc0LCJleHAiOjE3NTE1NzIxNzR9.DcPwD_SlLAxhHKCf-l-6_hdxyUyGPue-j6S9GUbUAhs
+@projectId = 68658d7ab46476e967ad6d9c
+@deliveryNoteId = 68658d8cb46476e967ad6da4
+
+### 1. CREATE DELIVERY NOTE (Hours)
+POST {{baseUrl}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "deliveryNoteNumber": "DN-2025-001",
+  "projectId": "{{projectId}}",
+  "date": "2025-01-15T10:00:00.000Z",
+  "items": [
+    {
+      "description": "Frontend Development",
+      "quantity": 8,
+      "unitPrice": 65.00,
+      "person": "John Doe"
+    },
+    {
+      "description": "UI/UX Design",
+      "quantity": 4,
+      "unitPrice": 75.00,
+      "person": "Jane Smith"
+    }
+  ],
+  "notes": "Initial phase development work completed"
+}
+
+###
+
+### 2. CREATE DELIVERY NOTE (Materials)
+POST {{baseUrl}}/deliverynote
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "deliveryNoteNumber": "DN-2025-002",
+  "projectId": "{{projectId}}",
+  "date": "2025-01-16T14:30:00.000Z",
+  "items": [
+    {
+      "description": "Server hosting (monthly)",
+      "quantity": 1,
+      "unitPrice": 299.99
+    },
+    {
+      "description": "SSL Certificate",
+      "quantity": 1,
+      "unitPrice": 89.99
+    },
+    {
+      "description": "Premium plugins license",
+      "quantity": 3,
+      "unitPrice": 49.99
+    }
+  ],
+  "notes": "Infrastructure setup and licensing"
+}
+
+###
+
+### 3. GET ALL DELIVERY NOTES
+GET {{baseUrl}}/deliverynote
+Authorization: Bearer {{token}}
+
+###
+
+### 4. GET DELIVERY NOTES WITH FILTERS
+GET {{baseUrl}}/deliverynote?projectId={{projectId}}&dateFrom=2025-01-01&dateTo=2025-01-31
+Authorization: Bearer {{token}}
+
+###
+
+### 5. GET DELIVERY NOTE BY ID
+GET {{baseUrl}}/deliverynote/{{deliveryNoteId}}
+Authorization: Bearer {{token}}
+
+###
+
+### 6. UPDATE DELIVERY NOTE
+PUT {{baseUrl}}/deliverynote/{{deliveryNoteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "deliveryNoteNumber": "DN-2025-001-UPDATED",
+  "projectId": "{{projectId}}",
+  "date": "2025-01-15T10:00:00.000Z",
+  "items": [
+    {
+      "description": "Frontend Development (Revised)",
+      "quantity": 10,
+      "unitPrice": 65.00,
+      "person": "John Doe"
+    },
+    {
+      "description": "UI/UX Design",
+      "quantity": 4,
+      "unitPrice": 75.00,
+      "person": "Jane Smith"
+    },
+    {
+      "description": "Code Review",
+      "quantity": 2,
+      "unitPrice": 85.00,
+      "person": "Senior Developer"
+    }
+  ],
+  "notes": "Updated scope with additional code review hours"
+}
+
+###
+
+### 7. SIGN DELIVERY NOTE
+PATCH {{baseUrl}}/deliverynote/sign/{{deliveryNoteId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "signatureUrl": "QmX1Y2Z3...",
+  "signedDate": "2025-01-20T16:45:00.000Z"
+}
+
+###
+
+### 8. DOWNLOAD DELIVERY NOTE PDF
+GET {{baseUrl}}/deliverynote/pdf/{{deliveryNoteId}}
+Authorization: Bearer {{token}}
+Accept: application/pdf
+
+###
+
+### 9. DELETE DELIVERY NOTE (Only if not signed)
+DELETE {{baseUrl}}/deliverynote/{{deliveryNoteId}}
+Authorization: Bearer {{token}}
+
+###

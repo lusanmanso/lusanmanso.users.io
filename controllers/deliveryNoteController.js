@@ -14,13 +14,12 @@ const User = require('../models/User');
 const { ApiError } = require('../middleware/handleError');
 
 // Environment variables for Pinata
-const pinataApiKey = process.env.PINATA_KEY;
-const pinataSecretApiKey = process.env.PINATA_SECRET;
+const pinataJWT = process.env.JWT_SECRET;
 const pinataGatewayUrl = process.env.PINATA_GATEWAY_URL || 'https://gateway.pinata.cloud';
 
-if (!pinataApiKey || !pinataSecretApiKey) {
+if (!pinataJWT) {
    console.warn(
-      "PINATA_KEY and/or PINATA_SECRET not configured in environment variables. " +
+      "PINATA_JWT not configured in environment variables. " +
       "IPFS operations will be disabled."
    );
 }
@@ -40,8 +39,8 @@ const uploadToIPFS = async (fileBuffer, fileName) => {
       return 'QmTestHashFor' + fileName.replace(/[^a-zA-Z0-9]/g, '');
    }
 
-   if (!pinataApiKey || !pinataSecretApiKey) {
-      throw new ApiError(500, 'IPFS service (Pinata API Keys) is not configured.', 'IPFS_CONFIG_ERROR');
+   if (!pinataJWT) {
+      throw new ApiError(500, 'IPFS service (Pinata JWT) is not configured.', 'IPFS_CONFIG_ERROR');
    }
 
    const url = `https://api.pinata.cloud/pinning/pinFileToIPFS`;
@@ -59,9 +58,8 @@ const uploadToIPFS = async (fileBuffer, fileName) => {
       const response = await fetch(url, {
          method: 'POST',
          headers: {
-            // 'Content-Type' is set automatically by fetch with FormData
-            'pinata_api_key': pinataApiKey, // As per IPFS.pdf
-            'pinata_secret_api_key': pinataSecretApiKey // As per IPFS.pdf
+            'Authorization': `Bearer ${pinataJWT}`,
+            ...data.getHeaders() // Para FormData
          },
          body: data
       });

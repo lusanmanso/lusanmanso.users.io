@@ -1,7 +1,7 @@
 ### Project API Endpoints Testing
 ### BASE URL
 @baseUrl = http://localhost:3000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4MDhjOWY0ZWZmNWRmOGYyNzk2NSIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDgyNTA4LCJleHAiOjE3NTE1Njg5MDh9.-gBEjC3XpE7R1SoL98R6kob3x82aCBGm6eSA3LLULII
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4NTgzNWIzMjZjN2M1OWIzZDdkYiIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDgzNzc5LCJleHAiOjE3NTE1NzAxNzl9.Um98-DP3aYuE9X5Ks86boeoF8D1y7MPIoHhqjeNAVNw
 @clientId = 686580999f4eff5df8f2796a
 @projectId = 686581259f4eff5df8f2798c
 
