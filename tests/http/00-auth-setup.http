@@ -162,12 +162,3 @@ Authorization: Bearer {{auth_token}}
 # @delivery_note_id = YOUR_DELIVERY_NOTE_ID_HERE
 
 ###
-
-### VARIABLES SUMMARY FOR OTHER FILES:
-### Replace these in the respective .http files:
-### {{auth_token}} = JWT token from login
-### {{client_id}} = Client ID from created client
-### {{project_id}} = Project ID from created project
-### {{delivery_note_id}} = Delivery Note ID from created delivery note
-
-###
