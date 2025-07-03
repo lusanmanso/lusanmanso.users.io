@@ -51,7 +51,7 @@ describe('Client API Tests', () => {
       const clientData = {
         name: 'John Doe',
         email: 'john@client.com',
-        company: null  // ✅ NULL en lugar de string
+        company: null  // NULL en lugar de string
       };
 
       const res = await request(app)
@@ -69,7 +69,6 @@ describe('Client API Tests', () => {
       const clientData = {
         name: 'Jane Smith',
         email: 'jane@company.com'
-        // ✅ SIN campo company
       };
 
       const res = await request(app)
@@ -93,7 +92,7 @@ describe('Client API Tests', () => {
         .send(clientData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation failed'); // ✅ Corregido
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with empty name', async () => {
@@ -108,7 +107,7 @@ describe('Client API Tests', () => {
         .send(clientData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation failed'); // ✅ Corregido
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail with name too short', async () => {
@@ -123,7 +122,7 @@ describe('Client API Tests', () => {
         .send(clientData)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation failed'); // ✅ Corregido
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail if client email already exists for user', async () => {
@@ -143,7 +142,7 @@ describe('Client API Tests', () => {
         .send(clientData)
         .expect(400);
 
-      // ✅ El validator se ejecuta antes que el controller
+      // El validator se ejecuta antes que el controller
       expect(res.body.message).toBe('Validation failed');
       expect(res.body.data.errors).toBeDefined();
       expect(res.body.data.errors[0].msg).toBe('Client with this email already exists for this user.');
@@ -180,7 +179,7 @@ describe('Client API Tests', () => {
         .expect(200);
 
       expect(res.body.message).toContain('retrieved successfully');
-      expect(Array.isArray(res.body.clients)).toBe(true); // ✅ Verificar estructura
+      expect(Array.isArray(res.body.clients)).toBe(true);
       expect(res.body.clients.length).toBe(2);
     });
 
@@ -393,7 +392,7 @@ describe('Client API Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .expect(400);
 
-      expect(res.body.message).toBe('Validation failed'); // ✅ Corregido
+      expect(res.body.message).toBe('Validation failed');
     });
 
     it('should fail without authentication', async () => {

@@ -1,9 +1,9 @@
 ### Delivery Note API Endpoints Testing
 ### BASE URL
 @baseUrl = http://localhost:3000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4ZDA0YjQ2NDc2ZTk2N2FkNmQ4YiIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDg1Nzc0LCJleHAiOjE3NTE1NzIxNzR9.DcPwD_SlLAxhHKCf-l-6_hdxyUyGPue-j6S9GUbUAhs
-@projectId = 68658d7ab46476e967ad6d9c
-@deliveryNoteId = 68658d8cb46476e967ad6da4
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjY1MGY3ODU4OWFiMDMzOTEyYjM3OCIsImVtYWlsIjoiam9obi5kb2VAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc1MTUzNjE4NiwiZXhwIjoxNzUxNjIyNTg2fQ.Z_KAMQIzsD8QBQ057-1G2U0YvXg2_f8yABqKore1YGc
+@projectId = 6866536b8589ab033912b394
+@deliveryNoteId = 686653b08589ab033912b3a7
 
 ### 1. CREATE DELIVERY NOTE (Hours)
 POST {{baseUrl}}/deliverynote

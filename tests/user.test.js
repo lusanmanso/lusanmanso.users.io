@@ -44,7 +44,7 @@ describe('User API Tests', () => {
         .send(userData)
         .expect(201);
 
-      // Verificar estructura exacta de respuesta
+      // Verify exact response structure
       expect(res.body).toHaveProperty('message');
       expect(res.body).toHaveProperty('user');
       expect(res.body).toHaveProperty('token');
@@ -52,7 +52,6 @@ describe('User API Tests', () => {
       expect(res.body.user.email).toBe(userData.email);
       expect(res.body.user.status).toBe('pending');
 
-      // Verificar en BD
       const dbUser = await User.findOne({ email: userData.email });
       expect(dbUser.isEmailVerified).toBe(false);
       expect(dbUser.verificationCode).toBeDefined();
@@ -79,7 +78,6 @@ describe('User API Tests', () => {
     });
 
     it('should reject duplicate email for verified user', async () => {
-      // Crear usuario verificado
       const existingUser = new User({
         name: 'Existing',
         surname: 'User',
@@ -137,7 +135,6 @@ describe('User API Tests', () => {
 
       expect(res.body.message).toBe('Email verified successfully');
 
-      // Verificar en BD
       const updatedUser = await User.findById(testUser._id);
       expect(updatedUser.isEmailVerified).toBe(true);
       expect(updatedUser.verificationCode).toBeNull();
@@ -150,7 +147,6 @@ describe('User API Tests', () => {
         .send({ code: 'wrong123' })
         .expect(400);
 
-      // Verificar respuesta flexiblemente - puede ser validation error o incorrect code
       if (res.body.success === false && res.body.type === 'VALIDATION_ERROR') {
         expect(res.body.data.errors).toBeDefined();
       } else {
@@ -267,7 +263,6 @@ describe('User API Tests', () => {
       expect(res.body.email).toBe('test@example.com');
       expect(res.body.role).toBe('user');
       expect(res.body.password).toBeUndefined();
-      // Nota: Los campos name/surname pueden o no estar presentes según la implementación
     });
 
     it('should require valid token', async () => {
@@ -414,7 +409,6 @@ describe('User API Tests', () => {
         .set('Authorization', `Bearer ${userToken}`)
         .send(companyData);
 
-      // Puede ser 200 o 400 dependiendo de la validación
       expect([200, 400]).toContain(res.status);
     });
 
@@ -464,7 +458,6 @@ describe('User API Tests', () => {
         .patch('/api/user/logo')
         .set('Authorization', `Bearer ${userToken}`);
 
-      // Dependiendo de la implementación puede ser 400 o 500
       expect([400, 500]).toContain(res.status);
     });
   });
@@ -626,7 +619,7 @@ describe('User API Tests', () => {
         .send(resetData)
         .expect(400);
 
-      // Verificar respuesta flexiblemente
+      // Verify the response flexibly
       if (res.body.success === false && res.body.type === 'VALIDATION_ERROR') {
         expect(res.body.data.errors).toBeDefined();
       } else {
@@ -700,7 +693,7 @@ describe('User API Tests', () => {
     });
 
     it('should handle user without company data', async () => {
-      // Crear usuario sin company
+      // Create user without company
       const bcrypt = require('bcrypt');
       const hashedPassword = await bcrypt.hash('Password123', 10);
 
@@ -730,7 +723,6 @@ describe('User API Tests', () => {
         .set('Authorization', `Bearer ${tokenWithoutCompany}`)
         .send(inviteData);
 
-      // Tu API permite invitación sin company data, así que puede ser 201 o 400
       expect([201, 400]).toContain(res.status);
 
       if (res.status === 400) {

@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
 // Cargar las variables de entorno para el entorno de test
-// Asegúrate de que tu archivo .env.test exista y contenga MONGODB_URI_TEST
 dotenv.config({ path: '.env.test' });
 
 module.exports = async () => {

@@ -14,7 +14,7 @@ const User = require('../models/User');
 const { ApiError } = require('../middleware/handleError');
 
 // Environment variables for Pinata
-const pinataJWT = process.env.JWT_SECRET;
+const pinataJWT = process.env.PINATA_KEY;
 const pinataGatewayUrl = process.env.PINATA_GATEWAY_URL || 'https://gateway.pinata.cloud';
 
 if (!pinataJWT) {

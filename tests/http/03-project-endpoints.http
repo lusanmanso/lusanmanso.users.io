@@ -1,9 +1,9 @@
 1### Project API Endpoints Testing
 ### BASE URL
 @baseUrl = http://localhost:3000/api
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjU4NTgzNWIzMjZjN2M1OWIzZDdkYiIsImVtYWlsIjoidGVzdEBleGFtcGxlLmNvbSIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzUxNDgzNzc5LCJleHAiOjE3NTE1NzAxNzl9.Um98-DP3aYuE9X5Ks86boeoF8D1y7MPIoHhqjeNAVNw
-@clientId = 686580999f4eff5df8f2796a
-@projectId = 686581259f4eff5df8f2798c
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4NjY1MGY3ODU4OWFiMDMzOTEyYjM3OCIsImVtYWlsIjoiam9obi5kb2VAZXhhbXBsZS5jb20iLCJyb2xlIjoidXNlciIsImlhdCI6MTc1MTUzNjE4NiwiZXhwIjoxNzUxNjIyNTg2fQ.Z_KAMQIzsD8QBQ057-1G2U0YvXg2_f8yABqKore1YGc
+@clientId = 686652498589ab033912b37f
+# @projectId = 686581259f4eff5df8f2798c
 
 ### 1. CREATE PROJECT
 POST {{baseUrl}}/project
